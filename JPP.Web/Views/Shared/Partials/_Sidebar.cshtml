@@ -66,6 +66,20 @@
             </div>
         </div>
 
+        <div class="menu-label">Customer</div>
+
+        <button class="menu-toggle" data-bs-toggle="collapse" data-bs-target="#CustomerMenu">
+            <i class="bi bi-cart-check"></i>
+            <span>Customer</span>
+            <i class="bi bi-chevron-right menu-arrow"></i>
+        </button>
+
+        <div class="collapse" id="CustomerMenu">
+            <div class="submenu">
+                <a asp-area="Admin" asp-controller="CustomerList" asp-action="Index">Customer List</a>
+            </div>
+        </div>
+
         <div class="menu-label">POS</div>
         
         <button class="menu-toggle" data-bs-toggle="collapse" data-bs-target="#POSSalesMenu">
