@@ -8,6 +8,7 @@ namespace JPP.Models.Customer.Responses.CustomerDto
 {
     public class CustomerDto
     {
+        public int CustomerId { get; set; }
         public string? Title { get; set; }
         public string FirstName { get; set; } = string.Empty;
         public string? MiddleName { get; set; }

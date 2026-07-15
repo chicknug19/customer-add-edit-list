@@ -1,14 +1,16 @@
-﻿using System;
+﻿using JPP.Models.HR.EmployeeList.Request;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.ComponentModel.DataAnnotations;
 
 namespace JPP.Models.Customer.Request
 {
     public class CustomerRequest
     {
+        public int ID { get; set; }
         public string? Title { get; set; }
         [Required(ErrorMessage = "First Name is required")]
         public string? FirstName { get; set; }
@@ -41,5 +43,7 @@ namespace JPP.Models.Customer.Request
         public int? StoreID { get; set; }
         public bool? AcceptSMS { get; set; }
         public bool? AcceptMailEmail { get; set; }
+
+        public string SubmitMode { get; set; } = "Save";
     }
 }

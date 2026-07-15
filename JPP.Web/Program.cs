@@ -12,6 +12,7 @@ builder.Logging.AddDebug();
 builder.Logging.SetMinimumLevel(LogLevel.Information);
 
 var mvcBuilder = builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
 
 if (builder.Environment.IsDevelopment())
 {
@@ -93,6 +94,8 @@ app.UseRouting();
 app.UseSession();
 
 app.UseAuthorization();
+
+app.MapRazorPages();
 
 app.MapControllerRoute(
     name: "areas",
