@@ -1,4 +1,5 @@
-﻿using JPP.Data.DataAccess;
+﻿using Microsoft.EntityFrameworkCore;
+using JPP.Data.DataAccess;
 using JPP.Data.Interfaces;
 using JPP.Data.Repositories;
 using JPP.Services.Interfaces;
@@ -52,6 +53,9 @@ builder.Services.AddScoped<IEmployeeListService, EmployeeListService>();
 builder.Services.AddScoped<IEmployeeDepartmentRepository, EmployeeDepartmentRepository>();
 builder.Services.AddScoped<IEmployeeDepartmentService, EmployeeDepartmentService>();
 
+
+builder.Services.AddScoped<ICustomerListRepository, CustomerListRepository>();
+builder.Services.AddScoped<ICustomerListService, CustomerListService>();
 
 builder.Services.AddScoped<IOtpService, CellboxOtpService>();
 builder.Services.AddScoped<IAccountEmailService, AccountEmailService>();
