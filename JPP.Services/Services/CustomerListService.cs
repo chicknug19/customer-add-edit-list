@@ -12,6 +12,7 @@ namespace JPP.Services.Services
         private readonly ICustomerListRepository _customerListRepository;
         private readonly ILogger<CustomerListService> _logger;
 
+
         public CustomerListService(
             ICustomerListRepository customerListRepository, 
             ILogger<CustomerListService> logger)

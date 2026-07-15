@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JPP.Models.Customer.Responses
+namespace JPP.Models.Customer.Responses.CustomerDto
 {
     public class CustomerDto
     {
