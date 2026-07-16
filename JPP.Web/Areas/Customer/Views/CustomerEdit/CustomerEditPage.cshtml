@@ -52,10 +52,8 @@
     </div>
 }
 
-<!-- PERBAIKAN: Arahkan ke Area Customer, Controller CustomerAdd, Action Save -->
-<form asp-area="Customer"
-      asp-controller="CustomerAdd"
-      asp-action="Save"
+<!-- Save form untuk halaman edit -->
+<form action="@Url.Action("Save", "CustomerEdit", new { area = "Customer" })"
       method="post"
       id="customerForm">
 
@@ -145,37 +143,8 @@
                     <input type="email" name="EmailAddress" value="@form.EmailAddress" class="form-control" @disabled />
                 </div>
 
-<<<<<<< HEAD:JPP.Web/Areas/Customer/Views/CustomerEdit/CustomerEditPage.cshtml
-                <div class="col-xl-3 col-md-6">
-                    <label class="form-label admin-form-label">Password (leave blank to keep)</label>
-                    <input type="password" name="Password" value="" class="form-control" autocomplete="new-password" @disabled />
-                </div>
-            </div>
-        </div>
-
-        <div class="crm-card mb-4">
-            <div class="section-title">
-                <h5>Address Information</h5>
-                <p>Customer residential and mailing address details.</p>
-            </div>
-
-            <div class="row g-3">
-                <div class="col-xl-3 col-md-6">
-                    <label class="form-label admin-form-label">Block/House No.</label>
-                    <input type="text" name="BlockHouseNo" value="@form.BlockHouseNo" class="form-control" @disabled />
-                </div>
-
-                <div class="col-xl-3 col-md-6">
-                    <label class="form-label admin-form-label">Unit No.</label>
-                    <input type="text" name="UnitNo" value="@form.UnitNo" class="form-control" @disabled />
-                </div>
-
-                <div class="col-xl-3 col-md-6">
-                    <label class="form-label admin-form-label">Address 1</label>
-=======
                 <div class="col-xl-6 col-md-12">
                     <label class="form-label admin-form-label">Address 1 <span class="text-danger">*</span></label>
->>>>>>> 83b4555449f9015a850f7dc6fd6e05fe30cc3afe:JPP.Web/Areas/Customer/Views/CustomerEdit/CustomerEdit.cshtml
                     <input type="text" name="Address1" value="@form.Address1" class="form-control" @disabled />
                 </div>
 

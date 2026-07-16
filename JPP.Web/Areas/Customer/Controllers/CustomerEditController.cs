@@ -16,12 +16,10 @@ namespace JPP.Web.Areas.Customer.Controllers
     {
         protected override bool RequireLogin => true;
 
-        private readonly ICustomerService _customerService;
         private readonly ICustomerEditService _customerEditService;
 
-        public CustomerEditController(ICustomerService customerService, ICustomerEditService customerEditService)
+        public CustomerEditController(ICustomerEditService customerEditService)
         {
-            _customerService = customerService;
             _customerEditService = customerEditService;
         }
 
@@ -134,6 +132,63 @@ namespace JPP.Web.Areas.Customer.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Save(CustomerRequest form, string SubmitMode)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["ErrorMessage"] = "Mohon periksa kembali kelengkapan data Anda.";
+
+                var invalidModel = new CustomerDetailViewModel
+                {
+                    Form = form,
+                    IsReadOnly = false
+                };
+
+                return View("CustomerEditPage", invalidModel);
+            }
+
+            try
+            {
+                var result = await _customerEditService.SaveCustomerAsync(form);
+
+                if (result.StatusCode != 200)
+                {
+                    TempData["ErrorMessage"] = result.StatusMessage;
+
+                    var invalidModel = new CustomerDetailViewModel
+                    {
+                        Form = form,
+                        IsReadOnly = false
+                    };
+
+                    return View("CustomerEditPage", invalidModel);
+                }
+
+                TempData["SuccessMessage"] = "Customer berhasil diperbarui.";
+
+                if (SubmitMode == "SaveAndClose")
+                {
+                    return RedirectToAction("Index", "CustomerList", new { area = "Customer" });
+                }
+
+                return RedirectToAction(nameof(Edit), new { id = form.ID });
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Terjadi kesalahan sistem: {ex.Message}";
+
+                var invalidModel = new CustomerDetailViewModel
+                {
+                    Form = form,
+                    IsReadOnly = false
+                };
+
+                return View("CustomerEditPage", invalidModel);
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> SaveAjax(CustomerRequest request)
         {
             if (!ModelState.IsValid)
@@ -149,7 +204,7 @@ namespace JPP.Web.Areas.Customer.Controllers
 
             try
             {
-                var result = await _customerService.AddCustomerAsync(request);
+                var result = await _customerEditService.SaveCustomerAsync(request);
 
                 if (result.StatusCode != 200)
                 {
