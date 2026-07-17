@@ -1,12 +1,12 @@
 ﻿using JPP.Data.DataAccess;
 using JPP.Data.Interfaces;
 using Dapper;
-using JPP.Models.Event.Request;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using JPP.Models.Event.Responses;
 
 namespace JPP.Data.Repositories
 {
