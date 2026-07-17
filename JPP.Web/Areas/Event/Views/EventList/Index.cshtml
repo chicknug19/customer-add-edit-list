@@ -1,0 +1,506 @@
+@{
+    ViewData["Title"] = "Event List";
+    ViewData["PageTitle"] = "Event List";
+    ViewData["PageSubtitle"] = "Manage event data";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div ng-app="customerListApp"
+     ng-controller="CustomerListController"
+     ng-cloak>
+
+    @Html.AntiForgeryToken()
+
+    <div class="admin-page-header mb-4">
+        <div>
+            <span class="admin-eyebrow">Admin</span>
+            <h3>Customer List</h3>
+            <p>Manage customer master data including name, address, and phone number.</p>
+        </div>
+
+        <div class="admin-page-actions">
+            <a href="/Customer/CustomerAdd/CustomerAddPage"
+               class="btn btn-main">
+                <i class="bi bi-plus-lg me-2"></i>
+                Add
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="alert alert-success alert-dismissible fade show" role="alert" ng-if="alert.type === 'success'">
+        <span ng-bind="alert.message"></span>
+        <button type="button" class="btn-close" ng-click="clearAlert()"></button>
+    </div>
+
+    <div class="alert alert-danger alert-dismissible fade show" role="alert" ng-if="alert.type === 'danger'">
+        <span ng-bind="alert.message"></span>
+        <button type="button" class="btn-close" ng-click="clearAlert()"></button>
+    </div>
+
+    <div class="crm-card mb-4">
+        <div class="section-title">
+            <h5>Filter Customer</h5>
+        </div>
+
+        <form ng-submit="searchCustomers()">
+            <div class="row g-3 align-items-end">
+                <div class="col-xl-6 col-md-6">
+                    <label class="form-label admin-form-label">Keyword</label>
+                    <div class="admin-input-icon">
+                        <i class="bi bi-search"></i>
+                        <input type="text"
+                               ng-model="filter.keyword"
+                               class="form-control"
+                               placeholder="Search by name, address, or phone" />
+                    </div>
+                </div>
+
+                <div class="col-xl-6 col-md-12 d-flex gap-2">
+                    <button type="submit"
+                            class="btn btn-main flex-fill"
+                            ng-disabled="isBusy()">
+                        <i class="bi bi-search me-2"></i>
+                        Search
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-soft"
+                            ng-click="resetFilter()"
+                            ng-disabled="isBusy()">
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="crm-card">
+        <div class="store-table-header">
+            <div>
+                <h5>Customer Data</h5>
+                <p>
+                    Showing
+                    <span ng-bind="customers.length"></span>
+                    customer record(s)
+                </p>
+            </div>
+
+            <button type="button"
+                    class="btn btn-soft btn-sm"
+                    ng-click="loadCustomers(true)"
+                    ng-disabled="isBusy()">
+                <i class="bi bi-arrow-clockwise me-1" ng-class="{ 'store-spin': isBusy() }"></i>
+                Refresh
+            </button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th class="sortable-th">
+                            FullName
+                        </th>
+
+                        <th class="sortable-th">
+                            <button type="button"
+                                    class="store-sort-button"
+                                    ng-class="{ 'active': isSorted('address1') }"
+                                    ng-click="changeSort('address1')">
+                                Address
+                                <i class="bi" ng-class="getSortIcon('address1')"></i>
+                            </button>
+                        </th>
+
+                        <th class="sortable-th">
+                            Phone
+                        </th>
+
+                        <th class="sortable-th">
+                            Event Name
+                        </th>
+                        <th class="text-center action-col">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr ng-repeat="customer in customers track by customer.customerID">
+                        <td data-label="Full Name">
+                            <span ng-bind="customer.fullName || '-'"></span>
+                        </td>
+
+                        <td data-label="Address">
+                            <span ng-bind="customer.address1 || '-'"></span>
+                        </td>
+
+                        <td data-label="Phone Number">
+                            <span class="store-phone" ng-if="customer.phoneNumber">
+                                <i class="bi bi-telephone me-1"></i>
+                                <span ng-bind="customer.phoneNumber"></span>
+                            </span>
+
+                            <span class="text-muted" ng-if="!customer.phoneNumber">-</span>
+                        </td>
+
+                        <td data-label="Event Name">
+                            <span ng-bind="customer.eventName || '-'"></span>
+                        </td>
+
+                        <td class="text-center action-sticky" data-label="Action">
+                            <div class="table-action-icons">
+                                <a href="/Customer/CustomerEdit/Edit?id={{ customer.customerID }}"
+                                   class="btn-action-icon btn-edit"
+                                   title="Edit">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr ng-if="customers.length === 0 && !isLoading">
+                        <td colspan="4">
+                            <div class="admin-empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <h5>No customers found</h5>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr ng-if="isLoading">
+                        <td colspan="4">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-secondary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="delete-confirm-backdrop"
+         ng-if="deleteModal.visible"
+         ng-click="closeDeleteConfirmation()">
+
+        <div class="delete-confirm-modal"
+             ng-click="$event.stopPropagation()">
+
+            <div class="delete-confirm-header">
+                <div class="delete-confirm-icon">
+                    <i class="bi bi-trash3"></i>
+                </div>
+
+                <div>
+                    <h5>Delete Customer?</h5>
+                    <p>This action will remove the customer record.</p>
+                </div>
+
+                <button type="button"
+                        class="delete-confirm-close"
+                        ng-click="closeDeleteConfirmation()"
+                        ng-disabled="isDeleting">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <div class="delete-confirm-body">
+                <div class="delete-store-preview">
+                    <div class="delete-store-avatar">
+                        <i class="bi bi-person"></i>
+                    </div>
+
+                    <div class="delete-store-info">
+                        <strong ng-bind="deleteModal.customer.fullName || '-'"></strong>
+                        <div>
+                            <span ng-if="deleteModal.customer.address1">
+                                {{ deleteModal.customer.address1 }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="delete-warning-box">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <span>
+                        Are you sure you want to delete this customer?
+                    </span>
+                </div>
+
+                <div class="delete-error-box" ng-if="deleteModal.errorMessage">
+                    <i class="bi bi-x-circle"></i>
+                    <span ng-bind="deleteModal.errorMessage"></span>
+                </div>
+            </div>
+
+            <div class="delete-confirm-actions">
+                <button type="button"
+                        class="btn btn-soft"
+                        ng-click="closeDeleteConfirmation()"
+                        ng-disabled="isDeleting">
+                    Cancel
+                </button>
+
+                <button type="button"
+                        class="btn btn-delete-confirm"
+                        ng-click="confirmDeleteCustomer()"
+                        ng-disabled="isDeleting">
+                    <span class="spinner-border spinner-border-sm me-2"
+                          ng-if="isDeleting"></span>
+                    <i class="bi bi-trash3 me-2"
+                       ng-if="!isDeleting"></i>
+                    <span ng-if="!isDeleting">Yes, Delete Customer</span>
+                    <span ng-if="isDeleting">Deleting...</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            'use strict';
+
+            angular
+                .module('customerListApp', [])
+                .controller('CustomerListController', CustomerListController);
+
+            CustomerListController.$inject = ['$scope', '$timeout', '$http'];
+
+            function CustomerListController($scope, $timeout, $http) {
+                var allCustomers = [];
+
+                $scope.filter = {
+                    keyword: ''
+                };
+
+                $scope.sort = {
+                    column: 'fullName',
+                    direction: 'ASC'
+                };
+
+                $scope.changeSort = changeSort;
+                $scope.isSorted = isSorted;
+                $scope.getSortIcon = getSortIcon;
+                $scope.customers = [];
+                $scope.isLoading = false;
+                $scope.isDeleting = false;
+
+                $scope.deleteModal = {
+                    visible: false,
+                    customer: null,
+                    errorMessage: ''
+                };
+
+                $scope.alert = {
+                    type: '',
+                    message: ''
+                };
+
+                $scope.loadCustomers = loadCustomers;
+                $scope.searchCustomers = searchCustomers;
+                $scope.resetFilter = resetFilter;
+                $scope.openDeleteConfirmation = openDeleteConfirmation;
+                $scope.closeDeleteConfirmation = closeDeleteConfirmation;
+                $scope.confirmDeleteCustomer = confirmDeleteCustomer;
+                $scope.clearAlert = clearAlert;
+                $scope.isBusy = isBusy;
+
+                loadCustomers(true);
+
+                function loadCustomers(reset) {
+                    $scope.isLoading = true;
+                    clearAlert();
+
+                    $http.get('/Customer/CustomerList/GetCustomerList', {
+                        params: {
+                            keyword: $scope.filter.keyword,
+                            page: 1,
+                            pageSize: 20
+                        }
+                    }).then(function (response) {
+                        var payload = response.data || {};
+                        allCustomers = payload.data || [];
+                        $scope.customers = allCustomers;
+
+                        $scope.isLoading = false;
+                    }).catch(function () {
+                        $scope.customers = [];
+                        $scope.isLoading = false;
+                        showAlert('danger', 'Failed to load customer data.');
+                    });
+                }
+
+                function applyCustomerFilter() {
+                    var filtered = allCustomers;
+
+                    if ($scope.filter.keyword) {
+                        var keyword = $scope.filter.keyword.toLowerCase();
+
+                        filtered = allCustomers.filter(function (c) {
+                            return (c.fullName || '').toLowerCase().includes(keyword) ||
+                                   (c.address1 || '').toLowerCase().includes(keyword) ||
+                                   (c.phoneNumber || '').toLowerCase().includes(keyword);
+                        });
+                    }
+
+                    allCustomers = allCustomers || [];
+                    $scope.customers = filtered;
+                    applyCustomerSort();
+                }
+
+                function changeSort(column) {
+                    if ($scope.sort.column === column) {
+                        $scope.sort.direction = ($scope.sort.direction === 'ASC') ? 'DESC' : 'ASC';
+                    } else {
+                        $scope.sort.column = column;
+                        $scope.sort.direction = 'ASC';
+                    }
+
+                    applyCustomerSort();
+                }
+
+                function isSorted(column) {
+                    return $scope.sort.column === column;
+                }
+
+                function getSortIcon(column) {
+                    if (!isSorted(column)) {
+                        return 'bi-arrow-down-up';
+                    }
+
+                    return $scope.sort.direction === 'ASC'
+                        ? 'bi-arrow-up'
+                        : 'bi-arrow-down';
+                }
+
+                function applyCustomerSort() {
+                    var sorted = angular.copy(allCustomers || []);
+
+                    sorted.sort(function (a, b) {
+                        var left = (a[$scope.sort.column] || '').toString().toLowerCase();
+                        var right = (b[$scope.sort.column] || '').toString().toLowerCase();
+
+                        if (left < right) return $scope.sort.direction === 'ASC' ? -1 : 1;
+                        if (left > right) return $scope.sort.direction === 'ASC' ? 1 : -1;
+                        return 0;
+                    });
+
+                    $scope.customers = sorted;
+                }
+
+                function searchCustomers() {
+                    if (isBusy()) {
+                        return;
+                    }
+
+                    clearAlert();
+                    applyCustomerFilter();
+                }
+
+                function resetFilter() {
+                    if (isBusy()) {
+                        return;
+                    }
+
+                    clearAlert();
+                    $scope.filter.keyword = '';
+                    applyCustomerFilter();
+                }
+
+                function openDeleteConfirmation(customer) {
+                    if (!customer || !customer.customerID) {
+                        return;
+                    }
+
+                    clearAlert();
+                    $scope.deleteModal.customer = customer;
+                    $scope.deleteModal.errorMessage = '';
+                    $scope.deleteModal.visible = true;
+                }
+
+                function closeDeleteConfirmation() {
+                    if ($scope.isDeleting) {
+                        return;
+                    }
+
+                    $scope.deleteModal.visible = false;
+                    $scope.deleteModal.customer = null;
+                    $scope.deleteModal.errorMessage = '';
+                }
+
+                function confirmDeleteCustomer() {
+                    var customer = $scope.deleteModal.customer;
+
+                    if (!customer || !customer.customerID) {
+                        closeDeleteConfirmation();
+                        return;
+                    }
+
+                    $scope.isDeleting = true;
+                    $scope.deleteModal.errorMessage = '';
+                    clearAlert();
+
+                    $timeout(function () {
+                        var index = allCustomers.findIndex(function (c) {
+                            return c.customerID === customer.customerID;
+                        });
+
+                        if (index > -1) {
+                            allCustomers.splice(index, 1);
+                        }
+
+                        applyCustomerFilter();
+
+                        var successMessage = 'Customer has been deleted successfully.';
+                        $scope.deleteModal.visible = false;
+                        $scope.deleteModal.customer = null;
+                        $scope.deleteModal.errorMessage = '';
+                        $scope.isDeleting = false;
+
+                        showAlert('success', successMessage);
+                    }, 800);
+                }
+
+                function isBusy() {
+                    return $scope.isLoading || $scope.isDeleting;
+                }
+
+                function showAlert(type, message) {
+                    $scope.alert.type = type;
+                    $scope.alert.message = message;
+
+                    if (type === 'success') {
+                        $timeout(function () {
+                            clearAlert();
+                        }, 3500);
+                    }
+                }
+
+                function clearAlert() {
+                    $scope.alert.type = '';
+                    $scope.alert.message = '';
+                }
+            }
+        })();
+    </script>
+}
