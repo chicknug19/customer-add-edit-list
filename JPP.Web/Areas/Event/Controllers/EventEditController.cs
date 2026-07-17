@@ -1,7 +1,6 @@
-using JPP.Models.Customer.Request;
-using JPP.Models.Customer.Responses;
+using JPP.Models.Event.Request;
+using JPP.Models.Event.Responses;
 using JPP.Models.Shared.Responses;
-using JPP.Models.Customer.Responses.CustomerDto;
 using JPP.Services.Interfaces;
 using JPP.Web.Controllers;
 using Microsoft.AspNetCore.Mvc;
@@ -9,18 +8,18 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace JPP.Web.Areas.Customer.Controllers
+namespace JPP.Web.Areas.Event.Controllers
 {
-    [Area("Customer")]
-    public class CustomerEditController : BaseController
+    [Area("Event")]
+    public class EventEditController : BaseController
     {
         protected override bool RequireLogin => true;
 
-        private readonly ICustomerEditService _customerEditService;
+        private readonly IEventEditService _eventEditService;
 
-        public CustomerEditController(ICustomerEditService customerEditService)
+        public EventEditController(IEventEditService eventEditService)
         {
-            _customerEditService = customerEditService;
+            _eventEditService = eventEditService;
         }
 
         [HttpGet]
@@ -28,19 +27,19 @@ namespace JPP.Web.Areas.Customer.Controllers
         {
             if (id <= 0)
             {
-                TempData["ErrorMessage"] = "Customer ID is invalid.";
+                TempData["ErrorMessage"] = "Event ID is invalid.";
                 return RedirectToAction(nameof(Index));
             }
 
-            var model = await _customerEditService.BuildEditViewModelAsync(id);
+            var model = await _eventEditService.BuildEditViewModelAsync(id);
 
             if (model == null)
             {
-                TempData["ErrorMessage"] = "Customer data was not found.";
+                TempData["ErrorMessage"] = "Event data was not found.";
                 return RedirectToAction(nameof(Index));
             }
 
-            return View("CustomerEditPage", model);
+            return View("EventEditPage", model);
         }
 
         // [HttpPost]
@@ -132,64 +131,64 @@ namespace JPP.Web.Areas.Customer.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Save(CustomerRequest form, string SubmitMode)
+        public async Task<IActionResult> Save(EventRequestDto form, string SubmitMode)
         {
             if (!ModelState.IsValid)
             {
                 TempData["ErrorMessage"] = "Mohon periksa kembali kelengkapan data Anda.";
 
-                var invalidModel = new CustomerDetailViewModel
+                var invalidModel = new EventDetailViewModel
                 {
                     Form = form,
                     IsReadOnly = false
                 };
 
-                return View("CustomerEditPage", invalidModel);
+                return View("EventEditPage", invalidModel);
             }
 
             try
             {
-                var result = await _customerEditService.SaveCustomerAsync(form);
+                var result = await _eventEditService.SaveEventAsync(form);
 
                 if (result.StatusCode != 200)
                 {
                     TempData["ErrorMessage"] = result.StatusMessage;
 
-                    var invalidModel = new CustomerDetailViewModel
+                    var invalidModel = new EventDetailViewModel
                     {
                         Form = form,
                         IsReadOnly = false
                     };
 
-                    return View("CustomerEditPage", invalidModel);
+                    return View("EventEditPage", invalidModel);
                 }
 
-                TempData["SuccessMessage"] = "Customer berhasil diperbarui.";
+                TempData["SuccessMessage"] = "Event berhasil diperbarui.";
 
                 if (SubmitMode == "SaveAndClose")
                 {
-                    return RedirectToAction("Index", "CustomerList", new { area = "Customer" });
+                    return RedirectToAction("Index", "EventList", new { area = "Event" });
                 }
 
-                return RedirectToAction(nameof(Edit), new { id = form.ID });
+                return RedirectToAction(nameof(Edit), new { id = form.Id });
             }
             catch (Exception ex)
             {
                 TempData["ErrorMessage"] = $"Terjadi kesalahan sistem: {ex.Message}";
 
-                var invalidModel = new CustomerDetailViewModel
+                var invalidModel = new EventDetailViewModel
                 {
                     Form = form,
                     IsReadOnly = false
                 };
 
-                return View("CustomerEditPage", invalidModel);
+                return View("EventEditPage", invalidModel);
             }
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SaveAjax(CustomerRequest request)
+        public async Task<IActionResult> SaveAjax(EventRequestDto form)
         {
             if (!ModelState.IsValid)
             {
@@ -204,7 +203,7 @@ namespace JPP.Web.Areas.Customer.Controllers
 
             try
             {
-                var result = await _customerEditService.SaveCustomerAsync(request);
+                var result = await _eventEditService.SaveEventAsync(form);
 
                 if (result.StatusCode != 200)
                 {
@@ -214,7 +213,7 @@ namespace JPP.Web.Areas.Customer.Controllers
                 }
 
                 return Json(BaseResult<object>.Ok(
-                    data: new { id = result.Data, redirectUrl = Url.Action(nameof(Index)) },
+                    data: new { id = result.Data, redirectUrl = Url.Action(nameof(Edit), new { id = form.Id }) },
                     statusMessage: result.StatusMessage));
             }
             catch (Exception ex)
