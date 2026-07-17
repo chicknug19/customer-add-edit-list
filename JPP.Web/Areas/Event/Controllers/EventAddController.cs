@@ -1,5 +1,4 @@
-﻿using JPP.Models.Customer.Request;
-using JPP.Models.Customer.Responses;
+﻿using JPP.Models.Event.Request;
 using JPP.Models.Event.Responses;
 using JPP.Services.Interfaces;
 using JPP.Web.Controllers;
@@ -8,38 +7,38 @@ using System.Threading.Tasks;
 
 namespace JPP.Web.Areas.Customer.Controllers
 {
-    [Area("Customer")]
-    public class CustomerEventAddController : BaseController
+    [Area("Event")]
+    public class EventAddController : BaseController
     {
         protected override bool RequireLogin => true;
 
         private readonly IEventAddService _eventAddService;
 
-        public CustomerEventAddController(IEventAddService eventAddService)
+        public EventAddController(IEventAddService eventAddService)
         {
             _eventAddService = eventAddService;
         }
 
         [HttpGet]
-        public IActionResult CustomerEventAddPage()
+        public IActionResult EventAddPage()
         {
             var model = new EventDetailViewModel
             {
-                Form = new EventRequest(),
+                Form = new EventRequestDto(),
                 IsReadOnly = false
             };
 
-            return View("CustomerEventAddPage", model);
+            return View("EventAddPage", model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Save(EventRequest form, string SubmitMode)
+        public async Task<IActionResult> Save(EventRequestDto form, string SubmitMode)
         {
             if (!ModelState.IsValid)
             {
                 TempData["ErrorMessage"] = "Mohon lengkapi data wajib.";
-                return View("CustomerEventAddPage", new EventDetailViewModel { Form = form, IsReadOnly = false });
+                return View("EventAddPage", new EventDetailViewModel { Form = form, IsReadOnly = false });
             }
 
             var result = await _eventAddService.AddEventAsync(form);
@@ -50,15 +49,15 @@ namespace JPP.Web.Areas.Customer.Controllers
 
                 if (SubmitMode == "SaveAndClose")
                 {
-                    return RedirectToAction("Index", "CustomerEventList", new { area = "Customer" });
+                    return RedirectToAction("Index", "EventList", new { area = "Event" });
                 }
 
-                return RedirectToAction("CustomerEventAddPage");
+                return RedirectToAction("EventAddPage");
             }
             else
             {
                 TempData["ErrorMessage"] = result.StatusMessage;
-                return View("CustomerEventAddPage", new EventDetailViewModel { Form = form, IsReadOnly = false });
+                return View("EventAddPage", new EventDetailViewModel { Form = form, IsReadOnly = false });
             }
         }
     }

@@ -1,8 +1,7 @@
 ﻿using JPP.Data.DataAccess;
 using JPP.Data.Interfaces;
-using JPP.Models.Customer.Request;
 using Dapper;
-using JPP.Models.Customer.Request;
+using JPP.Models.Event.Request;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,7 +28,7 @@ namespace JPP.Data.Repositories
             return await conn.ExecuteScalarAsync<int>(sql, new { Code = code.Trim() }) > 0;
         }
 
-        public async Task<int> CreateEventAsync(EventRequest request)
+        public async Task<int> CreateEventAsync(EventRequestDto request)
         {
             const string sql = @"
                 INSERT INTO BIZ_CustomerEvent (Name, Code, Description)
