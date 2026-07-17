@@ -158,6 +158,7 @@ namespace JPP.Web.Areas.Customer.Controllers
                     var invalidModel = new CustomerDetailViewModel
                     {
                         Form = form,
+                        EventName = form.EventName ?? string.Empty,
                         IsReadOnly = false
                     };
 
@@ -180,6 +181,7 @@ namespace JPP.Web.Areas.Customer.Controllers
                 var invalidModel = new CustomerDetailViewModel
                 {
                     Form = form,
+                    EventName = form.EventName ?? string.Empty,
                     IsReadOnly = false
                 };
 

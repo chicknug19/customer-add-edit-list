@@ -24,17 +24,20 @@ namespace JPP.Data.Repositories
 
             const string sql = @"
                 SELECT
-                    ID AS CustomerId,
-                    FirstName,
-                    MiddleName,
-                    LastName,
-                    PhoneNumber,
-                    PhoneNumber2,
-                    EmailAddress,
-                    Address1,
-                    Address2
-                FROM BIZ_Customer
-                WHERE ID = @Id";
+                    c.ID AS CustomerId,
+                    c.FirstName,
+                    c.MiddleName,
+                    c.LastName,
+                    c.PhoneNumber,
+                    c.PhoneNumber2,
+                    c.EmailAddress,
+                    c.Address1,
+                    c.Address2,
+                    c.EventID AS EventId,
+                    e.Name AS EventName
+                FROM BIZ_Customer c
+                LEFT JOIN BIZ_CustomerEvent e ON e.Id = c.EventID
+                WHERE c.ID = @Id";
 
             using var conn = _crmDbConnectionFactory.Create();
             return await conn.QuerySingleOrDefaultAsync<CustomerDto>(sql, new { Id = id });

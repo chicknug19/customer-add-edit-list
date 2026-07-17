@@ -151,6 +151,13 @@
                     <label class="form-label admin-form-label">Address 2</label>
                     <input type="text" name="Address2" value="@form.Address2" class="form-control" @disabled />
                 </div>
+
+                <div class="col-xl-4 col-md-6">
+                    <label class="form-label admin-form-label">Event Name</label>
+                    <input type="text" value="@Model.EventName" class="form-control" readonly />
+                    <input type="hidden" name="EventId" value="@form.EventId" />
+                    <input type="hidden" name="EventName" value="@Model.EventName" />
+                </div>
             </div>
         </div>
     </div>

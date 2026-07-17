@@ -42,7 +42,10 @@ namespace JPP.Services.Services
                     EmailAddress = customer.EmailAddress,
                     Address1 = customer.Address1,
                     Address2 = customer.Address2,
+                    EventId = customer.EventId,
+                    EventName = customer.EventName
                 },
+                EventName = customer.EventName ?? string.Empty,
                 IsReadOnly = false
             };
         }

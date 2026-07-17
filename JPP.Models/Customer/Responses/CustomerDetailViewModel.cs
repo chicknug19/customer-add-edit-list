@@ -16,5 +16,6 @@ namespace JPP.Models.Customer.Responses
 
         // TAMBAHKAN INI UNTUK DROPDOWN
         public IEnumerable<SelectListItem> EventOptions { get; set; } = new List<SelectListItem>();
+        public string EventName { get; set; } = string.Empty;
     }
 }
