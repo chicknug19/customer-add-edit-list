@@ -5,8 +5,8 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div ng-app="customerListApp"
-     ng-controller="CustomerListController"
+<div ng-app="eventListApp"
+     ng-controller="EventListController"
      ng-cloak>
 
     @Html.AntiForgeryToken()
@@ -58,7 +58,7 @@
             <h5>Filter Customer</h5>
         </div>
 
-        <form ng-submit="searchCustomers()">
+        <form ng-submit="searchEvents()">
             <div class="row g-3 align-items-end">
                 <div class="col-xl-6 col-md-6">
                     <label class="form-label admin-form-label">Keyword</label>
@@ -96,14 +96,14 @@
                 <h5>Customer Data</h5>
                 <p>
                     Showing
-                    <span ng-bind="customers.length"></span>
+                    <span ng-bind="events.length"></span>
                     customer record(s)
                 </p>
             </div>
 
             <button type="button"
                     class="btn btn-soft btn-sm"
-                    ng-click="loadCustomers(true)"
+                    ng-click="loadEvents(true)"
                     ng-disabled="isBusy()">
                 <i class="bi bi-arrow-clockwise me-1" ng-class="{ 'store-spin': isBusy() }"></i>
                 Refresh
@@ -140,9 +140,13 @@
                             <span ng-bind="event.description || '-'"></span>
                         </td>
 
-                        <td class="text-end">
-                            <div class="d-flex gap-2 justify-content-end">
-                                <a href="#" class="btn btn-soft btn-sm">Edit</a>
+                        <td class="text-center action-sticky" data-label="Action">
+                            <div class="table-action-icons">
+                                <a href="/Customer/CustomerEdit/Edit?id={{ customer.customerID }}"
+                                   class="btn-action-icon btn-edit"
+                                   title="Edit">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
                             </div>
                         </td>
                     </tr>
@@ -245,27 +249,27 @@
             'use strict';
 
             angular
-                .module('customerListApp', [])
-                .controller('CustomerListController', CustomerListController);
+                .module('eventListApp', [])
+                .controller('EventListController', EventListController);
 
-            CustomerListController.$inject = ['$scope', '$timeout', '$http'];
+            EventListController.$inject = ['$scope', '$timeout', '$http'];
 
-            function CustomerListController($scope, $timeout, $http) {
-                var allCustomers = [];
+            function EventListController($scope, $timeout, $http) {
+                var allEvents = [];
 
                 $scope.filter = {
                     keyword: ''
                 };
 
                 $scope.sort = {
-                    column: 'fullName',
+                    column: 'EventName',
                     direction: 'ASC'
                 };
 
                 $scope.changeSort = changeSort;
                 $scope.isSorted = isSorted;
                 $scope.getSortIcon = getSortIcon;
-                $scope.customers = [];
+                $scope.events = [];
                 $scope.isLoading = false;
                 $scope.isDeleting = false;
 
@@ -280,8 +284,8 @@
                     message: ''
                 };
 
-                $scope.loadCustomers = loadCustomers;
-                $scope.searchCustomers = searchCustomers;
+                $scope.loadEvents = loadEvents;
+                $scope.searchEvents = searchEvents;
                 $scope.resetFilter = resetFilter;
                 $scope.openDeleteConfirmation = openDeleteConfirmation;
                 $scope.closeDeleteConfirmation = closeDeleteConfirmation;
@@ -289,9 +293,9 @@
                 $scope.clearAlert = clearAlert;
                 $scope.isBusy = isBusy;
 
-                loadCustomers(true);
+                loadEvents(true);
 
-                function loadCustomers(reset) {
+                function loadEvents(reset) {
                     $scope.isLoading = true;
                     clearAlert();
 
@@ -303,33 +307,33 @@
                         }
                     }).then(function (response) {
                         var payload = response.data || {};
-                        allCustomers = payload.data || [];
-                        $scope.customers = allCustomers;
+                        allEvents = payload.data || [];
+                        $scope.events = allEvents;
 
                         $scope.isLoading = false;
                     }).catch(function () {
-                        $scope.customers = [];
+                        $scope.events = [];
                         $scope.isLoading = false;
                         showAlert('danger', 'Failed to load customer data.');
                     });
                 }
 
-                function applyCustomerFilter() {
-                    var filtered = allCustomers;
+                function applyEventsFilter() {
+                    var filtered = allEvents;
 
                     if ($scope.filter.keyword) {
                         var keyword = $scope.filter.keyword.toLowerCase();
 
-                        filtered = allCustomers.filter(function (c) {
+                        filtered = allEvents.filter(function (c) {
                             return (c.fullName || '').toLowerCase().includes(keyword) ||
                                    (c.address1 || '').toLowerCase().includes(keyword) ||
                                    (c.phoneNumber || '').toLowerCase().includes(keyword);
                         });
                     }
 
-                    allCustomers = allCustomers || [];
-                    $scope.customers = filtered;
-                    applyCustomerSort();
+                    allEvents = allEvents || [];
+                    $scope.events = filtered;
+                    applyEventsSort();
                 }
 
                 function changeSort(column) {
@@ -340,7 +344,7 @@
                         $scope.sort.direction = 'ASC';
                     }
 
-                    applyCustomerSort();
+                    applyEventsSort();
                 }
 
                 function isSorted(column) {
@@ -357,8 +361,8 @@
                         : 'bi-arrow-down';
                 }
 
-                function applyCustomerSort() {
-                    var sorted = angular.copy(allCustomers || []);
+                function applyEventsSort() {
+                    var sorted = angular.copy(allEvents || []);
 
                     sorted.sort(function (a, b) {
                         var left = (a[$scope.sort.column] || '').toString().toLowerCase();
@@ -369,16 +373,16 @@
                         return 0;
                     });
 
-                    $scope.customers = sorted;
+                    $scope.events = sorted;
                 }
 
-                function searchCustomers() {
+                function searchEvents() {
                     if (isBusy()) {
                         return;
                     }
 
                     clearAlert();
-                    applyCustomerFilter();
+                    applyEventsFilter();
                 }
 
                 function resetFilter() {
@@ -388,7 +392,7 @@
 
                     clearAlert();
                     $scope.filter.keyword = '';
-                    applyCustomerFilter();
+                    applyEventsFilter();
                 }
 
                 function openDeleteConfirmation(customer) {
@@ -425,15 +429,15 @@
                     clearAlert();
 
                     $timeout(function () {
-                        var index = allCustomers.findIndex(function (c) {
+                        var index = allEvents.findIndex(function (c) {
                             return c.customerID === customer.customerID;
                         });
 
                         if (index > -1) {
-                            allCustomers.splice(index, 1);
+                            allEvents.splice(index, 1);
                         }
 
-                        applyCustomerFilter();
+                        applyEventsFilter();
 
                         var successMessage = 'Customer has been deleted successfully.';
                         $scope.deleteModal.visible = false;
