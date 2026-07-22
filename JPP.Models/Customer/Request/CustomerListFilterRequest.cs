@@ -6,8 +6,8 @@ namespace JPP.Models.Customer.Request
     {
         public string? Keyword { get; set; }
 
-        public string? StoreId { get; set; }
-        public string? EventId { get; set; }
+        public int? StoreId { get; set; } = 0;
+        public int? EventId { get; set; } = 0;
 
     }
 }

@@ -55,6 +55,8 @@ namespace JPP.Data.Repositories
                 new
                 {
                     Keyword = keyword,
+                    StoreId = filter.StoreId,
+                    EventId = filter.EventId,
                     Skip = filter.Skip,
                     PageSize = filter.PageSize
                 });
