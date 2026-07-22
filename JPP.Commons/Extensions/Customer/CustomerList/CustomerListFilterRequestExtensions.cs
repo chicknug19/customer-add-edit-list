@@ -8,9 +8,12 @@ namespace JPP.Commons.Extensions
         private static readonly string[] AllowedSortColumns =
         {
             "CustomerID",
+            "AccNo",
             "FullName",
+            "PhoneNumber",
+            "Age",
             "Address1",
-            "PhoneNumber"
+            "Kecamatan"
         };
 
         public static void NormalizeFilter(this CustomerListFilterRequest filter)
