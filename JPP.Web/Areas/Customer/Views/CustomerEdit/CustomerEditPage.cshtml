@@ -158,6 +158,27 @@
                     <input type="hidden" name="EventId" value="@form.EventId" />
                     <input type="hidden" name="EventName" value="@Model.EventName" />
                 </div>
+
+                <div class="col-xl-6 col-md-6">
+                    <label class="form-label admin-form-label">Store Selection</label>
+                    <select name="StoreId" class="form-select" @disabled>
+                        <option value="">- Please Select Store -</option>
+                        @if (Model.StoreOptions != null && Model.StoreOptions.Any())
+                        {
+                            foreach (var item in Model.StoreOptions)
+                            {
+                                if (form.StoreId != null && item.Value == form.StoreId.ToString())
+                                {
+                                    <option value="@item.Value" selected>@item.Text</option>
+                                }
+                                else
+                                {
+                                    <option value="@item.Value">@item.Text</option>
+                                }
+                            }
+                        }
+                    </select>
+                </div>
             </div>
         </div>
     </div>
