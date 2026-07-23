@@ -22,5 +22,6 @@ namespace JPP.Models.Customer.Responses.CustomerDto
         public int StoreId { get; set; }
         public string? AccountNumber { get; set; } = string.Empty;
         public int? Age { get; set; }
+        public string District { get; set; }
     }
 }
