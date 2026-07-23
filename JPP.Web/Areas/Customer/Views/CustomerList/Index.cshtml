@@ -125,31 +125,23 @@
             <table class="table align-middle store-table">
                 <thead>
                     <tr>
-                        <th class="sortable-th">FullName</th>
-                        <th class="sortable-th">
-                            <button type="button"
-                                    class="store-sort-button"
-                                    ng-class="{ 'active': isSorted('address1') }"
-                                    ng-click="changeSort('address1')">
-                                Address
-                                <i class="bi" ng-class="getSortIcon('address1')"></i>
-                            </button>
-                        </th>
-                        <th class="sortable-th">Phone</th>
-                        <th class="sortable-th">Event Name</th>
+                        <th>Acc No</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Age</th>
+                        <th>Address</th>
+                        <th>Kecamatan</th>
                         <th class="text-center action-col">Action</th>
                     </tr>
                 </thead>
 
                 <tbody>
-    <!-- Changed 'track by customer.customerID' to 'track by $index' to prevent rendering crashes -->
                     <tr ng-repeat="customer in customers track by $index">
-                        <td data-label="Full Name">
-                            <!-- Added fallback casing just in case C# is returning PascalCase -->
-                            <span ng-bind="customer.fullName || customer.FullName || '-'"></span>
+                        <td data-label="Acc No">
+                            <span ng-bind="customer.accNo || customer.AccNo || '-'"></span>
                         </td>
-                        <td data-label="Address">
-                            <span ng-bind="customer.address1 || customer.Address1 || '-'"></span>
+                        <td data-label="Name">
+                            <span ng-bind="customer.fullName || customer.FullName || '-'"></span>
                         </td>
                         <td data-label="Phone Number">
                             <span class="store-phone" ng-if="customer.phoneNumber || customer.PhoneNumber">
@@ -158,8 +150,14 @@
                             </span>
                             <span class="text-muted" ng-if="!customer.phoneNumber && !customer.PhoneNumber">-</span>
                         </td>
-                        <td data-label="Event Name">
-                            <span ng-bind="customer.eventName || customer.EventName || '-'"></span>
+                        <td data-label="Age">
+                            <span ng-bind="customer.age || customer.Age || '-'"></span>
+                        </td>
+                        <td data-label="Address">
+                            <span ng-bind="customer.address1 || customer.Address1 || '-'"></span>
+                        </td>
+                        <td data-label="Kecamatan">
+                            <span ng-bind="customer.kecamatan || customer.Kecamatan || '-'"></span>
                         </td>
                         <td class="text-center action-sticky action-col" data-label="Action">
                             <div class="table-action-icons">
@@ -168,6 +166,12 @@
                                 title="Edit">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
+                                <button type="button"
+                                        class="btn-action-icon btn-diagnostic"
+                                        title="Diagnostic"
+                                        ng-click="openDiagnosticModal(customer)">
+                                    <i class="bi bi-clipboard2-pulse"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -175,6 +179,7 @@
             </table>
         </div>
     </div>
+     @await Html.PartialAsync("Diagnostic")
 </div>
 
 @section Scripts {
@@ -190,6 +195,20 @@
 
             function CustomerListController($scope, $timeout, $http) {
                 var allCustomers = [];
+
+                $scope.diagnosticModal = {
+                    visible: false,
+                    isLoading: false,
+                    isSaving: false,
+                    customer: null,
+                    entries: [],
+                    errorMessage: '',
+                    newEntry: { type: 'Skin', note: '' }
+                };
+
+                $scope.openDiagnosticModal = openDiagnosticModal;
+                $scope.closeDiagnosticModal = closeDiagnosticModal;
+                $scope.saveDiagnosticEntry = saveDiagnosticEntry;
 
                 $scope.sort = {
                     column: 'fullName',
@@ -223,6 +242,72 @@
 
                 loadFilterOptions();
                 loadCustomers();
+
+                
+                // Remove the duplicate/conflicting function declarations and use this single definition:
+                function openDiagnosticModal(customer) {
+                    if (!customer) return;
+                    
+                    var customerId = customer.customerID || customer.CustomerID || customer.Id;
+                    var eventId = customer.eventId || customer.EventId || 0;
+                    
+                    if (!customerId) return;
+
+                    $scope.diagnosticModal.visible = true; // Matches ng-if="diagnosticModal.visible" in HTML
+                    $scope.diagnosticModal.customer = customer;
+                    $scope.diagnosticModal.errorMessage = '';
+                    $scope.diagnosticModal.newEntry = { type: 'Skin', note: '' };
+                    
+                    loadDiagnosticEntries(customerId, eventId);
+                }
+
+                $scope.openDiagnosticModal = openDiagnosticModal;
+
+                function closeDiagnosticModal() {
+                    if ($scope.diagnosticModal.isSaving) return;
+                    $scope.diagnosticModal.visible = false;
+                    $scope.diagnosticModal.customer = null;
+                    $scope.diagnosticModal.entries = [];
+                }
+
+                function loadDiagnosticEntries(customerId, eventId) {
+                    $scope.diagnosticModal.isLoading = true;
+
+                    $http.get('/Customer/CustomerList/GetDiagnosticList', { 
+                        params: { customerId: customerId, eventId: eventId  } 
+                    })
+                    .then(function (response) {
+                        $scope.diagnosticModal.entries = response.data.data || response.data || [];
+                        $scope.diagnosticModal.isLoading = false;
+                    })
+                    .catch(function (error) {
+                        $scope.diagnosticModal.isLoading = false;
+                        $scope.diagnosticModal.errorMessage = 'Failed to load diagnostic history.';
+                        console.error('Error loading diagnostic list:', error);
+                    });
+                }
+
+                function saveDiagnosticEntry() {
+                    var customer = $scope.diagnosticModal.customer;
+                    var customerId = customer.customerID || customer.CustomerID || customer.Id;
+                    if (!customerId || !$scope.diagnosticModal.newEntry.note) return;
+
+                    $scope.diagnosticModal.isSaving = true;
+                    $scope.diagnosticModal.errorMessage = '';
+
+                    $http.post('/Customer/CustomerList/SaveDiagnostic', {
+                        customerId: customerId,
+                        type: $scope.diagnosticModal.newEntry.type,
+                        note: $scope.diagnosticModal.newEntry.note
+                    }).then(function () {
+                        $scope.diagnosticModal.newEntry.note = '';
+                        loadDiagnosticEntries(customerId);
+                        $scope.diagnosticModal.isSaving = false;
+                    }).catch(function () {
+                        $scope.diagnosticModal.isSaving = false;
+                        $scope.diagnosticModal.errorMessage = 'Failed to save diagnostic entry.';
+                    });
+                }
 
                 function loadFilterOptions() {
                     $http.get('/Customer/CustomerList/GetStoreOptions').then(function (response) {

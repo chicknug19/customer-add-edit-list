@@ -25,25 +25,32 @@ namespace JPP.Data.Repositories
             const string sql = @"
                 SELECT
                     c.ID AS CustomerID,
-                    ISNULL(c.FirstName, '') + ' ' + ISNULL(c.MiddleName, '') + ' ' + ISNULL(c.LastName, ' ') AS FullName,
-                    c.Address1,
+                    c.AccountNumber AS AccNo,
+                    ISNULL(c.FirstName, '') + ' ' +
+                    ISNULL(c.MiddleName, '') + ' ' +
+                    ISNULL(c.LastName, '') AS FullName,
                     c.PhoneNumber,
+                    c.Age,
+                    c.Address1,
+                    c.District AS Kecamatan,
                     c.EventID AS EventId,
                     e.Name AS EventName
                 FROM BIZ_Customer c
                 LEFT JOIN BIZ_Event e ON e.Id = c.EventID
                 WHERE
-                    (
-                        @Keyword = ''
-                        OR CAST(c.ID AS NVARCHAR(50)) LIKE '%' + @Keyword + '%'
-                        OR ISNULL(CAST(c.FirstName AS NVARCHAR(100)), '') LIKE '%' + @Keyword + '%'
-                        OR ISNULL(CAST(c.MiddleName AS NVARCHAR(100)), '') LIKE '%' + @Keyword + '%'
-                        OR ISNULL(CAST(c.LastName AS NVARCHAR(100)), '') LIKE '%' + @Keyword + '%'
-                        OR ISNULL(CAST(c.Address1 AS NVARCHAR(255)), '') LIKE '%' + @Keyword + '%'
-                        OR ISNULL(CAST(c.PhoneNumber AS NVARCHAR(100)), '') LIKE '%' + @Keyword + '%'
-                    )
-                    AND (@StoreId = 0 OR c.StoreID = @StoreId)
-                    AND (@EventId = 0 OR c.EventID = @EventId)
+                (
+                    @Keyword = ''
+                    OR CAST(c.ID AS NVARCHAR(50)) LIKE '%' + @Keyword + '%'
+                    OR ISNULL(CAST(c.AccountNumber AS NVARCHAR(50)), '') LIKE '%' + @Keyword + '%'
+                    OR ISNULL(CAST(c.FirstName AS NVARCHAR(100)), '') LIKE '%' + @Keyword + '%'
+                    OR ISNULL(CAST(c.MiddleName AS NVARCHAR(100)), '') LIKE '%' + @Keyword + '%'
+                    OR ISNULL(CAST(c.LastName AS NVARCHAR(100)), '') LIKE '%' + @Keyword + '%'
+                    OR ISNULL(CAST(c.Address1 AS NVARCHAR(255)), '') LIKE '%' + @Keyword + '%'
+                    OR ISNULL(CAST(c.PhoneNumber AS NVARCHAR(100)), '') LIKE '%' + @Keyword + '%'
+                    OR ISNULL(CAST(c.District AS NVARCHAR(150)), '') LIKE '%' + @Keyword + '%'
+                )
+                AND (@StoreId = 0 OR c.StoreID = @StoreId)
+                AND (@EventId = 0 OR c.EventID = @EventId)
                 ORDER BY FullName ASC
                 OFFSET @Skip ROWS
                 FETCH NEXT @PageSize ROWS ONLY;";
