@@ -73,19 +73,19 @@
             <div class="employee-toolbar-actions">
                 @if (!Model.IsReadOnly)
                 {
-                    <button type="submit"
+                    @* <button type="submit"
                             class="btn btn-main"
                             data-submit-mode="Save">
                         <span class="spinner-border spinner-border-sm me-2 d-none employee-save-spinner"></span>
                         <i class="bi bi-save me-2 employee-save-icon"></i>
                         Save
-                    </button>
+                    </button> *@
 
                     <button type="submit"
-                            class="btn btn-main-outline"
+                            class="btn btn-main"
                             data-submit-mode="SaveAndClose">
                         <span class="spinner-border spinner-border-sm me-2 d-none employee-save-spinner"></span>
-                        <i class="bi bi-check2-circle me-2 employee-save-icon"></i>
+                        <i class="bi bi-save me-2 employee-save-icon"></i>
                         Save And Close
                     </button>
                 }
@@ -125,6 +125,10 @@
                     <hr class="text-muted opacity-25 my-1" />
                 </div>
 
+                <div class="col-xl-4 col-md-6">
+                    <label class="form-label admin-form-label">Account Number</label>
+                    <input type="text" id="AccountNumber" name="AccountNumber" value="@form.AccountNumber" class="form-control bg-light" readonly placeholder="Auto-generated after selecting a Store" />
+                </div>
 
                 <div class="col-xl-4 col-md-6">
                     <label class="form-label admin-form-label">Phone Number <span class="text-danger">*</span></label>
@@ -145,7 +149,7 @@
                 </div>
 
                 <div class="col-xl-4 col-md-6">
-                    <label class="form-label admin-form-label">Email Address</label>
+                    <label class="form-label admin-form-label">Email Address <span class="text-danger">*</span></label>
                     <input type="email" name="EmailAddress" value="@form.EmailAddress" class="form-control" @disabled />
                     @Html.ValidationMessage("EmailAddress", "", new { @class = "text-danger small mt-1 d-block" })
                 </div>
@@ -204,11 +208,6 @@
                         </select>
                     </div>
                 }
-
-                <div class="col-xl-12 col-md-12">
-                    <label class="form-label admin-form-label">Account Number</label>
-                    <input type="text" id="AccountNumber" name="AccountNumber" value="@form.AccountNumber" class="form-control bg-light" readonly placeholder="Auto-generated after selecting a Store" />
-                </div>
             </div>
         </div>
     </div>

@@ -72,19 +72,19 @@
             <div class="employee-toolbar-actions">
                 @if (!Model.IsReadOnly)
                 {
-                    <button type="submit"
+                    @* <button type="submit"
                             class="btn btn-main"
                             data-submit-mode="Save">
                         <span class="spinner-border spinner-border-sm me-2 d-none employee-save-spinner"></span>
                         <i class="bi bi-save me-2 employee-save-icon"></i>
                         Save
-                    </button>
+                    </button> *@
 
                     <button type="submit"
-                            class="btn btn-main-outline"
+                            class="btn btn-main"
                             data-submit-mode="SaveAndClose">
                         <span class="spinner-border spinner-border-sm me-2 d-none employee-save-spinner"></span>
-                        <i class="bi bi-check2-circle me-2 employee-save-icon"></i>
+                        <i class="bi bi-save me-2 employee-save-icon"></i>
                         Save And Close
                     </button>
                 }
