@@ -162,5 +162,35 @@ namespace JPP.Web.Areas.Customer.Controllers
                     });
             }
         }
+        [HttpPost]
+        public async Task<IActionResult> DeleteCustomer([FromQuery] int customerId)
+        {
+            try
+            {
+                if (customerId <= 0)
+                {
+                    return BadRequest(new { Success = false, Message = "Invalid customer." });
+                }
+
+                var isSuccess = await _customerListService.DeleteCustomerAsync(customerId);
+
+                if (isSuccess)
+                {
+                    return Ok(new { Success = true, Message = "Customer has been deleted successfully." });
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, new { Success = false, Message = "Failed to delete customer. Please try again." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    Success = false,
+                    Message = $"An error occurred while deleting. {ex.Message}"
+                });
+            }
+        }
     }
 }

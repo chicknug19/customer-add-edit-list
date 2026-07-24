@@ -14,6 +14,7 @@ namespace JPP.Data.Interfaces
     {
     Task<List<CustomerListDto>> GetCustomerListAsync(CustomerListFilterRequest filter);
     Task<bool> SaveCustomerEventsAsync(CustomerEventSaveRequest request);
+    Task<bool> DeleteCustomerAsync(int customerId);
     }
     
 }

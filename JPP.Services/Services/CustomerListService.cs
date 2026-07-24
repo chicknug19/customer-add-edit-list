@@ -50,5 +50,23 @@ namespace JPP.Services.Services
             return await _customerListRepository.SaveCustomerEventsAsync(request);
         }
 
+        public async Task<bool> DeleteCustomerAsync(int customerId)
+        {
+            if (customerId <= 0)
+            {
+                return false;
+            }
+
+            try
+            {
+                return await _customerListRepository.DeleteCustomerAsync(customerId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting customer {CustomerId}", customerId);
+                return false;
+            }
+        }
+
     }
 }

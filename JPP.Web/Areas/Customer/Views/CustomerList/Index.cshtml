@@ -168,14 +168,12 @@
                         </td>
                         <td class="text-center action-sticky action-col" data-label="Action">
                             <div class="table-action-icons d-flex justify-content-center gap-1">
-                                <!-- Tombol Edit (Kuning/Krem bawaan) -->
                                 <a href="/Customer/CustomerEdit/Edit?id={{ customer.customerID || customer.CustomerID || customer.Id }}"
                                    class="btn-action-icon btn-edit"
                                    title="Edit">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
 
-                                <!-- Tombol Diagnostic (Biru Pastel) -->
                                 <button type="button"
                                         class="btn-action-icon text-primary"
                                         style="background-color: #e7f1ff; border-color: #cce5ff; border-style: solid; border-width: 1px;"
@@ -184,13 +182,19 @@
                                     <i class="bi bi-clipboard2-pulse"></i>
                                 </button>
 
-                                <!-- Tombol Assign Event (Hijau Pastel) -->
                                 <button type="button"
                                         class="btn-action-icon text-success"
                                         style="background-color: #d1e7dd; border-color: #badbcc; border-style: solid; border-width: 1px;"
                                         title="Assign Event"
                                         ng-click="openEventModal(customer)">
                                     <i class="bi bi-calendar-plus"></i>
+                                </button>
+
+                                <button type="button"
+                                        class="btn-action-icon btn-delete"
+                                        title="Delete Customer"
+                                        ng-click="openDeleteConfirmation(customer)">
+                                    <i class="bi bi-trash3"></i>
                                 </button>
                             </div>
                         </td>
@@ -250,6 +254,82 @@
         </div>
     </div>
     @await Html.PartialAsync("Diagnostic")
+    <div class="delete-confirm-backdrop"
+        ng-if="deleteModal.visible"
+        ng-click="closeDeleteConfirmation()">
+
+        <div class="delete-confirm-modal"
+            ng-click="$event.stopPropagation()">
+
+            <div class="delete-confirm-header">
+                <div class="delete-confirm-icon">
+                    <i class="bi bi-trash3"></i>
+                </div>
+
+                <div>
+                    <h5>Delete Customer?</h5>
+                    <p>This action will remove the customer record.</p>
+                </div>
+
+                <button type="button"
+                        class="delete-confirm-close"
+                        ng-click="closeDeleteConfirmation()"
+                        ng-disabled="isDeleting">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <div class="delete-confirm-body">
+                <div class="delete-store-preview">
+                    <div class="delete-store-avatar">
+                        <i class="bi bi-person"></i>
+                    </div>
+
+                    <div class="delete-store-info">
+                        <strong ng-bind="deleteModal.customer.fullName || deleteModal.customer.FullName || '-'"></strong>
+                        <div>
+                            <span ng-if="deleteModal.customer.accNo || deleteModal.customer.AccNo">
+                                {{ deleteModal.customer.accNo || deleteModal.customer.AccNo }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="delete-warning-box">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <span>
+                        Are you sure you want to delete this customer? This customer will no longer appear in the list.
+                    </span>
+                </div>
+
+                <div class="delete-error-box" ng-if="deleteModal.errorMessage">
+                    <i class="bi bi-x-circle"></i>
+                    <span ng-bind="deleteModal.errorMessage"></span>
+                </div>
+            </div>
+
+            <div class="delete-confirm-actions">
+                <button type="button"
+                        class="btn btn-soft"
+                        ng-click="closeDeleteConfirmation()"
+                        ng-disabled="isDeleting">
+                    Cancel
+                </button>
+
+                <button type="button"
+                        class="btn btn-delete-confirm"
+                        ng-click="confirmDeleteCustomer()"
+                        ng-disabled="isDeleting">
+                    <span class="spinner-border spinner-border-sm me-2"
+                        ng-if="isDeleting"></span>
+                    <i class="bi bi-trash3 me-2"
+                    ng-if="!isDeleting"></i>
+                    <span ng-if="!isDeleting">Yes, Delete Customer</span>
+                    <span ng-if="isDeleting">Deleting...</span>
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
@@ -293,6 +373,13 @@
                 $scope.closeEventModal = closeEventModal;
                 $scope.toggleEventSelection = toggleEventSelection;
                 $scope.saveCustomerEvents = saveCustomerEvents;
+
+                $scope.deleteModal = {
+                    visible: false,
+                    customer: null,
+                    errorMessage: ''
+                };
+                $scope.isDeleting = false;
 
                 $scope.sort = {
                     column: 'fullName',
@@ -575,7 +662,8 @@
                 }
 
                 function openDeleteConfirmation(customer) {
-                    if (!customer || !customer.customerID) {
+                    var customerId = customer && (customer.customerID || customer.CustomerID || customer.Id);
+                    if (!customerId) {
                         return;
                     }
 
@@ -597,8 +685,9 @@
 
                 function confirmDeleteCustomer() {
                     var customer = $scope.deleteModal.customer;
+                    var customerId = customer && (customer.customerID || customer.CustomerID || customer.Id);
 
-                    if (!customer || !customer.customerID) {
+                    if (!customerId) {
                         closeDeleteConfirmation();
                         return;
                     }
@@ -607,25 +696,25 @@
                     $scope.deleteModal.errorMessage = '';
                     clearAlert();
 
-                    $timeout(function () {
-                        var index = allCustomers.findIndex(function (c) {
-                            return c.customerID === customer.customerID;
-                        });
-
-                        if (index > -1) {
-                            allCustomers.splice(index, 1);
-                        }
-
-                        applyCustomerFilter();
-
-                        var successMessage = 'Customer has been deleted successfully.';
-                        $scope.deleteModal.visible = false;
-                        $scope.deleteModal.customer = null;
-                        $scope.deleteModal.errorMessage = '';
+                    $http.post('/Customer/CustomerList/DeleteCustomer', null, {
+                        params: { customerId: customerId }
+                    }).then(function (response) {
                         $scope.isDeleting = false;
 
-                        showAlert('success', successMessage);
-                    }, 800);
+                        if (response.data && response.data.success) {
+                            $scope.deleteModal.visible = false;
+                            $scope.deleteModal.customer = null;
+                            $scope.deleteModal.errorMessage = '';
+
+                            showAlert('success', response.data.message || 'Customer has been deleted successfully.');
+                            loadCustomers(true);
+                        } else {
+                            $scope.deleteModal.errorMessage = (response.data && response.data.message) || 'Failed to delete customer.';
+                        }
+                    }).catch(function () {
+                        $scope.isDeleting = false;
+                        $scope.deleteModal.errorMessage = 'System error while deleting customer.';
+                    });
                 }
 
                 function isBusy() {
