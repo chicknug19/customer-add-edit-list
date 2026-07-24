@@ -2,58 +2,62 @@
     <link rel="stylesheet" href="~/css/app.css" />
 }
 
-<div class="diagnostic-panel" ng-if="diagnosticModal.visible">
-    <div class="diagnostic-panel-header">
-        <div>
-            <h6 class="mb-0" ng-bind="diagnosticModal.customer.fullName || diagnosticModal.customer.FullName"></h6>
-        </div>
-        <button type="button" class="btn-close" ng-click="closeDiagnosticModal()"></button>
-    </div>
-
-    <div class="diagnostic-panel-body">
-        <div class="alert alert-danger py-2" ng-if="diagnosticModal.errorMessage" ng-bind="diagnosticModal.errorMessage"></div>
-
-        <div class="text-center py-3" ng-if="diagnosticModal.isLoading">
-            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+<div class="delete-confirm-backdrop" ng-if="diagnosticModal.visible" ng-click="closeDiagnosticModal()" ng-cloak>
+    <div class="diagnostic-panel"
+         ng-click="$event.stopPropagation()"
+         style="position: static; top: auto; left: auto; right: auto; bottom: auto; transform: none; width: 550px; max-width: 90vw; max-height: 85vh; overflow-y: auto;">
+        <div class="diagnostic-panel-header">
+            <div>
+                <h6 class="mb-0" ng-bind="diagnosticModal.customer.fullName || diagnosticModal.customer.FullName"></h6>
+            </div>
+            <button type="button" class="btn-close" ng-click="closeDiagnosticModal()"></button>
         </div>
 
-        <div class="diagnostic-history" ng-if="!diagnosticModal.isLoading">
-            <div class="diagnostic-entry" ng-repeat="entry in diagnosticModal.entries track by $index">
-                <div class="diagnostic-entry-label">
-                    <strong ng-bind="(entry.type || entry.Type) + ':'"></strong>
-                    <span ng-bind="entry.description || entry.Description || entry.note || entry.Note"></span>
+        <div class="diagnostic-panel-body">
+            <div class="alert alert-danger py-2" ng-if="diagnosticModal.errorMessage" ng-bind="diagnosticModal.errorMessage"></div>
+
+            <div class="text-center py-3" ng-if="diagnosticModal.isLoading">
+                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+            </div>
+
+            <div class="diagnostic-history" ng-if="!diagnosticModal.isLoading" style="max-height: 45vh; overflow-y: auto;">
+                <div class="diagnostic-entry" ng-repeat="entry in diagnosticModal.entries track by $index">
+                    <div class="diagnostic-entry-label">
+                        <strong ng-bind="(entry.type || entry.Type) + ':'"></strong>
+                        <span ng-bind="entry.description || entry.Description || entry.note || entry.Note"></span>
+                    </div>
+                    <div class="diagnostic-entry-date" ng-bind="(entry.logDate || entry.LogDate || entry.date || entry.Date) | date:'dd-MMM-yyyy'"></div>
                 </div>
-                <div class="diagnostic-entry-date" ng-bind="(entry.logDate || entry.LogDate || entry.date || entry.Date) | date:'dd-MMM-yyyy'"></div>
+
+                <div class="text-muted small" ng-if="diagnosticModal.entries.length === 0">
+                    No diagnostic records yet.
+                </div>
             </div>
 
-            <div class="text-muted small" ng-if="diagnosticModal.entries.length === 0">
-                No diagnostic records yet.
-            </div>
-        </div>
+            <div class="diagnostic-new-entry">
+                <div class="diagnostic-type-toggle">
+                    <label class="diagnostic-toggle-option">
+                        <input type="radio" ng-model="diagnosticModal.newEntry.type" value="Skin" /> Skin
+                    </label>
+                    <label class="diagnostic-toggle-option">
+                        <input type="radio" ng-model="diagnosticModal.newEntry.type" value="Dental" /> Dental
+                    </label>
+                </div>
 
-        <div class="diagnostic-new-entry">
-            <div class="diagnostic-type-toggle">
-                <label class="diagnostic-toggle-option">
-                    <input type="radio" ng-model="diagnosticModal.newEntry.type" value="Skin" /> Skin
-                </label>
-                <label class="diagnostic-toggle-option">
-                    <input type="radio" ng-model="diagnosticModal.newEntry.type" value="Dental" /> Dental
-                </label>
-            </div>
+                <div class="d-flex gap-2 align-items-start mt-2">
+                    <textarea class="form-control form-control-sm"
+                              rows="2"
+                              placeholder="Add a note..."
+                              ng-model="diagnosticModal.newEntry.note"></textarea>
 
-            <div class="d-flex gap-2 align-items-start mt-2">
-                <textarea class="form-control form-control-sm"
-                          rows="2"
-                          placeholder="Add a note..."
-                          ng-model="diagnosticModal.newEntry.note"></textarea>
-
-                <button type="button"
-                        class="btn btn-main btn-sm"
-                        ng-click="saveDiagnosticEntry()"
-                        ng-disabled="diagnosticModal.isSaving || !diagnosticModal.newEntry.note">
-                    <i class="bi bi-check-lg" ng-if="!diagnosticModal.isSaving"></i>
-                    <span class="spinner-border spinner-border-sm" ng-if="diagnosticModal.isSaving"></span>
-                </button>
+                    <button type="button"
+                            class="btn btn-main btn-sm"
+                            ng-click="saveDiagnosticEntry()"
+                            ng-disabled="diagnosticModal.isSaving || !diagnosticModal.newEntry.note">
+                        <i class="bi bi-check-lg" ng-if="!diagnosticModal.isSaving"></i>
+                        <span class="spinner-border spinner-border-sm" ng-if="diagnosticModal.isSaving"></span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

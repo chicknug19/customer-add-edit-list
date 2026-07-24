@@ -14,4 +14,10 @@ namespace JPP.Models.Customer.Responses
             public string Skin { get; set; } = "No";
             public string Dental { get; set; } = "No";
         }
+    
+    public class CustomerEventDto
+    {
+        public string Name { get; set; }
+        public DateTime EventDateTime { get; set; }
+    }
 }

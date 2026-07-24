@@ -168,14 +168,12 @@
                         </td>
                         <td class="text-center action-sticky action-col" data-label="Action">
                             <div class="table-action-icons d-flex justify-content-center gap-1">
-                                <!-- Tombol Edit (Kuning/Krem bawaan) -->
                                 <a href="/Customer/CustomerEdit/Edit?id={{ customer.customerID || customer.CustomerID || customer.Id }}"
                                    class="btn-action-icon btn-edit"
                                    title="Edit">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
 
-                                <!-- Tombol Diagnostic (Biru Pastel) -->
                                 <button type="button"
                                         class="btn-action-icon text-primary"
                                         style="background-color: #e7f1ff; border-color: #cce5ff; border-style: solid; border-width: 1px;"
@@ -184,13 +182,19 @@
                                     <i class="bi bi-clipboard2-pulse"></i>
                                 </button>
 
-                                <!-- Tombol Assign Event (Hijau Pastel) -->
                                 <button type="button"
                                         class="btn-action-icon text-success"
                                         style="background-color: #d1e7dd; border-color: #badbcc; border-style: solid; border-width: 1px;"
                                         title="Assign Event"
                                         ng-click="openEventModal(customer)">
                                     <i class="bi bi-calendar-plus"></i>
+                                </button>
+
+                                <button type="button"
+                                        class="btn-action-icon btn-delete"
+                                        title="Delete Customer"
+                                        ng-click="openDeleteConfirmation(customer)">
+                                    <i class="bi bi-trash3"></i>
                                 </button>
                             </div>
                         </td>
@@ -200,56 +204,187 @@
         </div>
     </div>
 
-    <div class="custom-bottom-right-panel shadow" ng-if="eventModal.visible" ng-cloak>
-        <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-white" style="border-radius: 8px 8px 0 0;">
-            <span class="fw-bold text-dark" style="font-size: 0.95rem;">
-                {{ eventModal.customer.fullName || eventModal.customer.FullName }}
-            </span>
-            <button type="button" class="btn-close" style="font-size: 0.75rem;" ng-click="closeEventModal()"></button>
-        </div>
+    <!-- EVENT MODAL -->
+    <div class="delete-confirm-backdrop" ng-if="eventModal.visible" ng-click="closeEventModal()" ng-cloak>
+        <div class="custom-bottom-right-panel shadow"
+            ng-click="$event.stopPropagation()"
+            style="position: static; top: auto; left: auto; right: auto; bottom: auto; transform: none; width: 550px; max-width: 90vw; max-height: 85vh; display: flex; flex-direction: column;">
 
-        <div class="p-3 overflow-auto bg-white" style="max-height: 250px;">
-            <div class="text-center my-4" ng-if="eventModal.isLoading">
-                <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
-                <div class="small mt-2 text-muted">Loading events...</div>
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-white" style="border-radius: 8px 8px 0 0;">
+                <span class="fw-bold text-dark" style="font-size: 0.95rem;">
+                    {{ eventModal.customer.fullName || eventModal.customer.FullName }}
+                </span>
+                <button type="button" class="btn-close" style="font-size: 0.75rem;" ng-click="closeEventModal()"></button>
             </div>
 
-            <div class="text-center text-muted small py-3" ng-if="!eventModal.isLoading && eventModal.events.length === 0">
-                No events available.
+            <!-- Assigned events table (Event | Date) -->
+            <div class="p-3 overflow-auto bg-white" style="max-height: 30vh;">
+                <div class="text-center my-3" ng-if="eventModal.isLoadingCustomerEvents">
+                    <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
+                    <div class="small mt-2 text-muted">Loading events...</div>
+                </div>
+
+                <table class="table table-sm mb-0" ng-if="!eventModal.isLoadingCustomerEvents && eventModal.customerEvents.length > 0">
+                    <thead>
+                        <tr>
+                            <th style="font-size: 0.8rem;">Event</th>
+                            <th style="font-size: 0.8rem;">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="ce in eventModal.customerEvents">
+                            <td style="font-size: 0.85rem;" ng-bind="ce.name || ce.Name"></td>
+                            <td style="font-size: 0.85rem;" ng-bind="formatEventDate(ce.eventDateTime || ce.EventDateTime)"></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="text-center text-muted small py-2" ng-if="!eventModal.isLoadingCustomerEvents && eventModal.customerEvents.length === 0">
+                    No events assigned yet.
+                </div>
             </div>
 
-            <div ng-if="!eventModal.isLoading && eventModal.events.length > 0">
-                <div class="d-flex align-items-start mb-3 border-bottom pb-2" ng-repeat="event in eventModal.events">
-                    <input class="form-check-input mt-1 me-2"
-                           type="checkbox"
-                           id="eventCheck_{{ event.id || event.Id }}"
-                           value="{{ event.id || event.Id }}"
-                           ng-checked="eventModal.selectedIds.includes(event.id || event.Id)"
-                           ng-click="toggleEventSelection(event.id || event.Id)"
-                           style="cursor: pointer;">
-                    <label for="eventCheck_{{ event.id || event.Id }}" style="cursor: pointer; width: 100%;">
-                        <div class="fw-medium text-dark" style="font-size: 0.85rem;">{{ event.name || event.Name }}</div>
-                        <div class="text-muted" style="font-size: 0.75rem;">{{ event.code || event.Code }}</div>
-                    </label>
+            <!-- Event picker, shown when "Event List" is toggled on -->
+            <div class="p-3 overflow-auto bg-white border-top" ng-if="eventModal.showEventList" style="max-height: 30vh;">
+                <div class="text-center my-3" ng-if="eventModal.isLoading">
+                    <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
+                    <div class="small mt-2 text-muted">Loading events...</div>
+                </div>
+
+                <div class="text-center text-muted small py-2" ng-if="!eventModal.isLoading && eventModal.events.length === 0">
+                    No events available.
+                </div>
+
+                <div ng-if="!eventModal.isLoading && eventModal.events.length > 0">
+                    <div class="d-flex align-items-start mb-2 border-bottom pb-2" ng-repeat="event in eventModal.events">
+                        <input class="form-check-input mt-1 me-2"
+                            type="checkbox"
+                            id="eventCheck_{{ event.id || event.Id }}"
+                            value="{{ event.id || event.Id }}"
+                            ng-checked="eventModal.selectedIds.includes(event.id || event.Id)"
+                            ng-click="toggleEventSelection(event.id || event.Id)"
+                            style="cursor: pointer;">
+                        <label for="eventCheck_{{ event.id || event.Id }}" style="cursor: pointer; width: 100%;">
+                            <div class="fw-medium text-dark" style="font-size: 0.85rem;">{{ event.name || event.Name }}</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">{{ event.code || event.Code }}</div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-3 border-top bg-white mt-auto" style="border-radius: 0 0 8px 8px;">
+                <div class="alert alert-danger mb-3"
+                    ng-if="eventModal.errorMessage">
+                    {{ eventModal.errorMessage }}
+                </div>
+
+                <div class="d-flex justify-content-end mb-2"
+                    ng-if="eventModal.showEventList">
+                    <span class="text-muted" style="font-size:0.75rem;">
+                        {{ eventModal.selectedIds.length }} selected
+                    </span>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="fw-medium text-dark">Event</span>
+
+                    <div class="d-flex gap-2">
+                        <button type="button"
+                                class="btn btn-main btn-sm"
+                                ng-click="toggleEventListView()">
+                            Event List
+                        </button>
+
+                        <button type="button"
+                                class="btn btn-main btn-sm"
+                                ng-click="saveCustomerEvents()"
+                                ng-disabled="eventModal.selectedIds.length === 0 || eventModal.isSaving">
+                            <span class="spinner-border spinner-border-sm"
+                                ng-if="eventModal.isSaving"></span>
+                            <span ng-if="!eventModal.isSaving">Add</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <div class="p-3 border-top bg-white d-flex justify-content-between align-items-center" style="border-radius: 0 0 8px 8px;">
-            <span class="text-muted" style="font-size: 0.75rem;">
-                {{ eventModal.selectedIds.length }} selected
-            </span>
-            <button type="button"
-                    class="btn btn-outline-secondary btn-sm"
-                    style="border-radius: 50%; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;"
-                    ng-click="saveCustomerEvents()"
-                    ng-disabled="eventModal.selectedIds.length === 0 || eventModal.isSaving">
-                <span class="spinner-border spinner-border-sm" ng-if="eventModal.isSaving"></span>
-                <i class="bi bi-check2" ng-if="!eventModal.isSaving"></i>
-            </button>
-        </div>
     </div>
     @await Html.PartialAsync("Diagnostic")
+    <div class="delete-confirm-backdrop"
+        ng-if="deleteModal.visible"
+        ng-click="closeDeleteConfirmation()">
+
+        <div class="delete-confirm-modal"
+            ng-click="$event.stopPropagation()">
+
+            <div class="delete-confirm-header">
+                <div class="delete-confirm-icon">
+                    <i class="bi bi-trash3"></i>
+                </div>
+
+                <div>
+                    <h5>Delete Customer?</h5>
+                    <p>This action will remove the customer record.</p>
+                </div>
+
+                <button type="button"
+                        class="delete-confirm-close"
+                        ng-click="closeDeleteConfirmation()"
+                        ng-disabled="isDeleting">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <div class="delete-confirm-body">
+                <div class="delete-store-preview">
+                    <div class="delete-store-avatar">
+                        <i class="bi bi-person"></i>
+                    </div>
+
+                    <div class="delete-store-info">
+                        <strong ng-bind="deleteModal.customer.fullName || deleteModal.customer.FullName || '-'"></strong>
+                        <div>
+                            <span ng-if="deleteModal.customer.accNo || deleteModal.customer.AccNo">
+                                {{ deleteModal.customer.accNo || deleteModal.customer.AccNo }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="delete-warning-box">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <span>
+                        Are you sure you want to delete this customer? This customer will no longer appear in the list.
+                    </span>
+                </div>
+
+                <div class="delete-error-box" ng-if="deleteModal.errorMessage">
+                    <i class="bi bi-x-circle"></i>
+                    <span ng-bind="deleteModal.errorMessage"></span>
+                </div>
+            </div>
+
+            <div class="delete-confirm-actions">
+                <button type="button"
+                        class="btn btn-soft"
+                        ng-click="closeDeleteConfirmation()"
+                        ng-disabled="isDeleting">
+                    Cancel
+                </button>
+
+                <button type="button"
+                        class="btn btn-delete-confirm"
+                        ng-click="confirmDeleteCustomer()"
+                        ng-disabled="isDeleting">
+                    <span class="spinner-border spinner-border-sm me-2"
+                        ng-if="isDeleting"></span>
+                    <i class="bi bi-trash3 me-2"
+                    ng-if="!isDeleting"></i>
+                    <span ng-if="!isDeleting">Yes, Delete Customer</span>
+                    <span ng-if="isDeleting">Deleting...</span>
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
@@ -284,15 +419,28 @@
                     visible: false,
                     isLoading: false,
                     isSaving: false,
+                    isLoadingCustomerEvents: false,
                     customer: null,
                     events: [],
-                    selectedIds: []
+                    customerEvents: [],
+                    selectedIds: [],
+                    showEventList: false,
+                    errorMessage: ''
                 };
 
                 $scope.openEventModal = openEventModal;
                 $scope.closeEventModal = closeEventModal;
                 $scope.toggleEventSelection = toggleEventSelection;
                 $scope.saveCustomerEvents = saveCustomerEvents;
+                $scope.toggleEventListView = toggleEventListView;
+                $scope.formatEventDate = formatEventDate;
+
+                $scope.deleteModal = {
+                    visible: false,
+                    customer: null,
+                    errorMessage: ''
+                };
+                $scope.isDeleting = false;
 
                 $scope.sort = {
                     column: 'fullName',
@@ -327,13 +475,17 @@
                 loadFilterOptions();
                 loadCustomers();
 
-                // --- EVENT MODAL FUNCTIONS ---
                 function openEventModal(customer) {
                     if (!customer) return;
 
+                    var customerId = customer.customerID || customer.CustomerID || customer.Id;
+
+                    $scope.eventModal.errorMessage = '';
                     $scope.eventModal.customer = customer;
                     $scope.eventModal.selectedIds = [];
                     $scope.eventModal.visible = true;
+                    $scope.eventModal.showEventList = false;
+                    $scope.eventModal.customerEvents = [];
                     $scope.eventModal.isLoading = true;
 
                     $http.get('/Customer/CustomerList/GetEventOptions')
@@ -345,13 +497,46 @@
                             $scope.eventModal.isLoading = false;
                             showAlert('danger', 'Failed to load event list.');
                         });
+
+                    loadCustomerEvents(customerId);
+                }
+
+                function loadCustomerEvents(customerId) {
+                    if (!customerId) return;
+
+                    $scope.eventModal.isLoadingCustomerEvents = true;
+
+                    $http.get('/Customer/CustomerList/GetCustomerEvents', { params: { customerId: customerId } })
+                        .then(function (response) {
+                            $scope.eventModal.customerEvents = response.data || [];
+                            $scope.eventModal.isLoadingCustomerEvents = false;
+                        })
+                        .catch(function (error) {
+                            $scope.eventModal.isLoadingCustomerEvents = false;
+                            showAlert('danger', 'Failed to load assigned events.');
+                        });
+                }
+
+                function toggleEventListView() {
+                    $scope.eventModal.showEventList = !$scope.eventModal.showEventList;
+                }
+
+                function formatEventDate(dateValue) {
+                    if (!dateValue) return '-';
+                    var d = new Date(dateValue);
+                    if (isNaN(d.getTime())) return dateValue;
+                    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
                 }
 
                 function closeEventModal() {
                     if ($scope.eventModal.isSaving) return;
+                    $scope.eventModal.errorMessage = '';
                     $scope.eventModal.visible = false;
                     $scope.eventModal.customer = null;
                     $scope.eventModal.selectedIds = [];
+                    $scope.eventModal.customerEvents = [];
+                    $scope.eventModal.showEventList = false;
                 }
 
                 function toggleEventSelection(eventId) {
@@ -364,32 +549,78 @@
                 }
 
                 function saveCustomerEvents() {
-                    if ($scope.eventModal.selectedIds.length === 0) return;
+                if ($scope.eventModal.selectedIds.length === 0) return;
+                $scope.eventModal.errorMessage = '';
 
-                    $scope.eventModal.isSaving = true;
+                var duplicateEvents = [];
 
-                    var customerId = $scope.eventModal.customer.customerID || $scope.eventModal.customer.CustomerID || $scope.eventModal.customer.Id;
+                $scope.eventModal.selectedIds.forEach(function (selectedId) {
 
-                    var payload = {
-                        CustomerId: customerId,
-                        EventIds: $scope.eventModal.selectedIds
-                    };
+                    var selectedEvent = $scope.eventModal.events.find(function (e) {
+                        return (e.id || e.Id) == selectedId;
+                    });
 
-                    $http.post('/Customer/CustomerList/SaveCustomerEvents', payload)
-                        .then(function (response) {
-                            $scope.eventModal.isSaving = false;
-                            if (response.data && response.data.success) {
-                                showAlert('success', response.data.message);
-                                closeEventModal();
-                            } else {
-                                showAlert('danger', response.data ? response.data.message : 'Failed to save events.');
-                            }
-                        })
-                        .catch(function (error) {
-                            $scope.eventModal.isSaving = false;
-                            showAlert('danger', 'System error while saving events.');
-                        });
+                    if (!selectedEvent) return;
+
+                    var selectedName = (selectedEvent.name || selectedEvent.Name || "").trim().toLowerCase();
+
+                    var alreadyExists = $scope.eventModal.customerEvents.some(function (ce) {
+                        var customerEventName = (ce.name || ce.Name || "").trim().toLowerCase();
+                        return customerEventName === selectedName;
+                    });
+
+                    if (alreadyExists) {
+                        duplicateEvents.push(selectedEvent.name || selectedEvent.Name);
+                    }
+                });
+
+                if (duplicateEvents.length > 0) {
+                    $scope.eventModal.errorMessage =
+                        'This customer is already included in event: ' +
+                        duplicateEvents.join(', ');
+                    return;
                 }
+
+                $scope.eventModal.isSaving = true;
+
+                var customerId =
+                    $scope.eventModal.customer.customerID ||
+                    $scope.eventModal.customer.CustomerID ||
+                    $scope.eventModal.customer.Id;
+
+                var payload = {
+                    CustomerId: customerId,
+                    EventIds: $scope.eventModal.selectedIds
+                };
+
+                $http.post('/Customer/CustomerList/SaveCustomerEvents', payload)
+                    .then(function (response) {
+                        $scope.eventModal.isSaving = false;
+
+                        if (response.data && response.data.success) {
+                            showAlert('success', response.data.message);
+                            $scope.eventModal.selectedIds = [];
+                            $scope.eventModal.showEventList = false;
+                            loadCustomerEvents(customerId);
+                        } else {
+                            $scope.eventModal.errorMessage =
+                                response.data.message || 'Failed to save events.';
+                        }
+                    })
+                    .catch(function (error) {
+                        $scope.eventModal.isSaving = false;
+
+                        var errorMessage = 'System error while saving events.';
+
+                        if (error && error.data && error.data.message) {
+                            errorMessage = error.data.message;
+                        } else if (error && error.data && error.data.Message) {
+                            errorMessage = error.data.Message;
+                        }
+
+                        showAlert('danger', errorMessage);
+                    });
+            }
 
 
                 function openDiagnosticModal(customer) {
@@ -575,7 +806,8 @@
                 }
 
                 function openDeleteConfirmation(customer) {
-                    if (!customer || !customer.customerID) {
+                    var customerId = customer && (customer.customerID || customer.CustomerID || customer.Id);
+                    if (!customerId) {
                         return;
                     }
 
@@ -597,8 +829,9 @@
 
                 function confirmDeleteCustomer() {
                     var customer = $scope.deleteModal.customer;
+                    var customerId = customer && (customer.customerID || customer.CustomerID || customer.Id);
 
-                    if (!customer || !customer.customerID) {
+                    if (!customerId) {
                         closeDeleteConfirmation();
                         return;
                     }
@@ -607,25 +840,25 @@
                     $scope.deleteModal.errorMessage = '';
                     clearAlert();
 
-                    $timeout(function () {
-                        var index = allCustomers.findIndex(function (c) {
-                            return c.customerID === customer.customerID;
-                        });
-
-                        if (index > -1) {
-                            allCustomers.splice(index, 1);
-                        }
-
-                        applyCustomerFilter();
-
-                        var successMessage = 'Customer has been deleted successfully.';
-                        $scope.deleteModal.visible = false;
-                        $scope.deleteModal.customer = null;
-                        $scope.deleteModal.errorMessage = '';
+                    $http.post('/Customer/CustomerList/DeleteCustomer', null, {
+                        params: { customerId: customerId }
+                    }).then(function (response) {
                         $scope.isDeleting = false;
 
-                        showAlert('success', successMessage);
-                    }, 800);
+                        if (response.data && response.data.success) {
+                            $scope.deleteModal.visible = false;
+                            $scope.deleteModal.customer = null;
+                            $scope.deleteModal.errorMessage = '';
+
+                            showAlert('success', response.data.message || 'Customer has been deleted successfully.');
+                            loadCustomers(true);
+                        } else {
+                            $scope.deleteModal.errorMessage = (response.data && response.data.message) || 'Failed to delete customer.';
+                        }
+                    }).catch(function () {
+                        $scope.isDeleting = false;
+                        $scope.deleteModal.errorMessage = 'System error while deleting customer.';
+                    });
                 }
 
                 function isBusy() {

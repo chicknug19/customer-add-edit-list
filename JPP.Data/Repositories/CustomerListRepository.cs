@@ -68,6 +68,7 @@ namespace JPP.Data.Repositories
                     OR ISNULL(CAST(c.PhoneNumber AS NVARCHAR(100)), '') LIKE '%' + @Keyword + '%'
                     OR ISNULL(CAST(c.District AS NVARCHAR(150)), '') LIKE '%' + @Keyword + '%'
                 )
+                AND (c.InActive = 0)
                 AND (@StoreId = 0 OR c.StoreID = @StoreId)
                 AND (
                     @EventId = 0
@@ -123,7 +124,6 @@ namespace JPP.Data.Repositories
             {
                 var now = DateTime.Now;
 
-                // Looping sebanyak event yang dipilih oleh user
                 foreach (var eventId in request.EventIds)
                 {
                     await conn.ExecuteAsync(insertSql, new
@@ -146,10 +146,37 @@ namespace JPP.Data.Repositories
             }
         }
 
+        public async Task<bool> DeleteCustomerAsync(int customerId)
+        {
+            const string sql = @"
+                UPDATE BIZ_Customer
+                SET InActive = 1
+                WHERE ID = @CustomerId;";
 
+            using var conn = _crmDbConnectionFactory.Create();
 
+            var rowsAffected = await conn.ExecuteAsync(sql, new { CustomerId = customerId });
+            return rowsAffected > 0;
+        }
 
+        public async Task<List<CustomerEventDto>> GetCustomerEventsAsync(int customerId)
+        {
+            const string sql = @"
+                SELECT
+                    e.Name,
+                    e.EventDateTime
+                FROM Customer_Event ce
+                INNER JOIN BIZ_Event e ON e.Id = ce.EventId
+                WHERE ce.CustomerId = @CustomerId
+                ORDER BY e.EventDateTime DESC;";
 
+            using var conn = _crmDbConnectionFactory.Create();
 
+            var result = await conn.QueryAsync<CustomerEventDto>(
+                sql,
+                new { CustomerId = customerId });
+
+            return result.ToList();
+        }
     }
 }

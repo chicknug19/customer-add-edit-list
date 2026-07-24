@@ -8,5 +8,7 @@ namespace JPP.Services.Interfaces
     {
         Task<CustomerServiceResult> GetCustomerListAsync(CustomerListFilterRequest filter);
         Task<bool> SaveCustomerEventsAsync(CustomerEventSaveRequest request);
+        Task<bool> DeleteCustomerAsync(int customerId);
+        Task<List<CustomerEventDto>> GetCustomerEventsAsync(int customerId);
     }
 }
