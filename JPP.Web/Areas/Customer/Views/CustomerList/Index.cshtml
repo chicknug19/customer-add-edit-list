@@ -204,7 +204,6 @@
         </div>
     </div>
 
-    <!-- EVENT MODAL -->
     <div class="delete-confirm-backdrop" ng-if="eventModal.visible" ng-click="closeEventModal()" ng-cloak>
         <div class="custom-bottom-right-panel shadow"
             ng-click="$event.stopPropagation()"
@@ -218,7 +217,7 @@
             </div>
 
             <!-- Assigned events table (Event | Date) -->
-            <div class="p-3 overflow-auto bg-white" style="max-height: 30vh;">
+            <div class="p-3 overflow-auto bg-white" style="max-height: 35vh; min-height: 150px;">
                 <div class="text-center my-3" ng-if="eventModal.isLoadingCustomerEvents">
                     <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
                     <div class="small mt-2 text-muted">Loading events...</div>
@@ -244,65 +243,117 @@
                 </div>
             </div>
 
-            <!-- Event picker, shown when "Event List" is toggled on -->
-            <div class="p-3 overflow-auto bg-white border-top" ng-if="eventModal.showEventList" style="max-height: 30vh;">
-                <div class="text-center my-3" ng-if="eventModal.isLoading">
-                    <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
-                    <div class="small mt-2 text-muted">Loading events...</div>
-                </div>
+            <div class="delete-confirm-backdrop" ng-if="eventModal.visible" ng-click="closeEventModal()" ng-cloak>
+                <div class="custom-bottom-right-panel shadow"
+                    ng-click="$event.stopPropagation()"
+                    style="position: static; top: auto; left: auto; right: auto; bottom: auto; transform: none; width: 550px; max-width: 90vw; max-height: 85vh; display: flex; flex-direction: column;">
 
-                <div class="text-center text-muted small py-2" ng-if="!eventModal.isLoading && eventModal.events.length === 0">
-                    No events available.
-                </div>
-
-                <div ng-if="!eventModal.isLoading && eventModal.events.length > 0">
-                    <div class="d-flex align-items-start mb-2 border-bottom pb-2" ng-repeat="event in eventModal.events">
-                        <input class="form-check-input mt-1 me-2"
-                            type="checkbox"
-                            id="eventCheck_{{ event.id || event.Id }}"
-                            value="{{ event.id || event.Id }}"
-                            ng-checked="eventModal.selectedIds.includes(event.id || event.Id)"
-                            ng-click="toggleEventSelection(event.id || event.Id)"
-                            style="cursor: pointer;">
-                        <label for="eventCheck_{{ event.id || event.Id }}" style="cursor: pointer; width: 100%;">
-                            <div class="fw-medium text-dark" style="font-size: 0.85rem;">{{ event.name || event.Name }}</div>
-                            <div class="text-muted" style="font-size: 0.75rem;">{{ event.code || event.Code }}</div>
-                        </label>
+                    <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-white" style="border-radius: 8px 8px 0 0;">
+                        <span class="fw-bold text-dark" style="font-size: 0.95rem;">
+                            {{ eventModal.customer.fullName || eventModal.customer.FullName }}
+                        </span>
+                        <button type="button" class="btn-close" style="font-size: 0.75rem;" ng-click="closeEventModal()"></button>
                     </div>
-                </div>
-            </div>
 
-            <div class="p-3 border-top bg-white mt-auto" style="border-radius: 0 0 8px 8px;">
-                <div class="alert alert-danger mb-3"
-                    ng-if="eventModal.errorMessage">
-                    {{ eventModal.errorMessage }}
-                </div>
+                    <!-- Assigned events table (Event | Date) -->
+                    <div class="p-3 bg-white" style="min-height: 150px;">
+                        <div class="text-center my-3" ng-if="eventModal.isLoadingCustomerEvents">
+                            <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
+                            <div class="small mt-2 text-muted">Loading events...</div>
+                        </div>
 
-                <div class="d-flex justify-content-end mb-2"
-                    ng-if="eventModal.showEventList">
-                    <span class="text-muted" style="font-size:0.75rem;">
-                        {{ eventModal.selectedIds.length }} selected
-                    </span>
-                </div>
+                        <!-- NEW: Wrapper to limit height to ~5 items and enable scrolling -->
+                        <div style="max-height: 185px; overflow-y: auto;" ng-if="!eventModal.isLoadingCustomerEvents && eventModal.customerEvents.length > 0">
+                            <table class="table table-sm mb-0">
+                                <!-- NEW: Sticky header so it stays visible while scrolling -->
+                                <thead style="position: sticky; top: 0; background: white; z-index: 1; box-shadow: 0 1px 0 #dee2e6;">
+                                    <tr>
+                                        <th style="font-size: 0.8rem;">Event</th>
+                                        <th style="font-size: 0.8rem;">Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="ce in eventModal.customerEvents">
+                                        <td style="font-size: 0.85rem;" ng-bind="ce.name || ce.Name"></td>
+                                        <td style="font-size: 0.85rem;" ng-bind="formatEventDate(ce.eventDateTime || ce.EventDateTime)"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
 
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="fw-medium text-dark">Event</span>
+                        <div class="text-center text-muted small py-2" ng-if="!eventModal.isLoadingCustomerEvents && eventModal.customerEvents.length === 0">
+                            No events assigned yet.
+                        </div>
+                    </div>
 
-                    <div class="d-flex gap-2">
-                        <button type="button"
-                                class="btn btn-main btn-sm"
-                                ng-click="toggleEventListView()">
-                            Event List
-                        </button>
+                    <!-- Bottom section: Multi-Select Dropdown & Add Button -->
+                    <div class="p-3 border-top bg-white mt-auto" style="border-radius: 0 0 8px 8px; position: relative;">
+                        <div class="alert alert-danger mb-3" ng-if="eventModal.errorMessage">
+                            {{ eventModal.errorMessage }}
+                        </div>
 
-                        <button type="button"
-                                class="btn btn-main btn-sm"
-                                ng-click="saveCustomerEvents()"
-                                ng-disabled="eventModal.selectedIds.length === 0 || eventModal.isSaving">
-                            <span class="spinner-border spinner-border-sm"
-                                ng-if="eventModal.isSaving"></span>
-                            <span ng-if="!eventModal.isSaving">Add</span>
-                        </button>
+                        <div class="row align-items-center g-2">
+                            <div class="col-auto">
+                                <label class="fw-bold text-muted mb-0" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Event</label>
+                            </div>
+
+                            <div class="col position-relative">
+                                <button type="button" 
+                                        class="form-select text-start shadow-sm"
+                                        ng-click="toggleEventListView(); $event.stopPropagation();"
+                                        style="cursor: pointer; background-color: #fff; min-height: 38px;">
+                                    <span class="text-truncate d-block w-100 pe-4" style="font-size: 0.95rem;">
+                                        {{ getSelectedEventsLabel() || 'Select Events...' }}
+                                    </span>
+                                </button>
+
+                                <!-- UPDATED: Increased max-height from 125px to 220px to show 5 options -->
+                                <div class="dropdown-menu show w-100 shadow border mt-1 p-0" 
+                                    ng-if="eventModal.showEventList"
+                                    ng-click="$event.stopPropagation()"
+                                    style="max-height: 220px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1050; border-radius: 6px;">
+                                    
+                                    <div class="text-center py-3" ng-if="eventModal.isLoading">
+                                        <div class="spinner-border spinner-border-sm text-secondary"></div>
+                                        <div class="small mt-1 text-muted">Loading options...</div>
+                                    </div>
+
+                                    <div class="text-center text-muted small py-3" ng-if="!eventModal.isLoading && eventModal.events.length === 0">
+                                        No events available.
+                                    </div>
+
+                                    <div class="list-group list-group-flush" ng-if="!eventModal.isLoading && eventModal.events.length > 0">
+                                        <label class="list-group-item list-group-item-action d-flex align-items-center m-0 py-2 px-3 custom-dropdown-item" 
+                                            ng-repeat="event in eventModal.events"
+                                            style="cursor: pointer; border-left: none; border-right: none;">
+                                            
+                                            <input class="form-check-input m-0 me-3" 
+                                                type="checkbox" 
+                                                id="modalEventCheck_{{ event.id || event.Id }}"
+                                                ng-checked="eventModal.selectedIds.includes(event.id || event.Id)"
+                                                ng-click="toggleEventSelection(event.id || event.Id)"
+                                                style="cursor: pointer; transform: scale(1.1);">
+                                            
+                                            <span class="w-100 text-dark user-select-none m-0" 
+                                                style="font-size: 0.95rem; cursor: pointer;">
+                                                {{ event.name || event.Name }}
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Add Button -->
+                            <div class="col-auto">
+                                <button type="button"
+                                        class="btn btn-main btn-sm px-4 py-2"
+                                        ng-click="saveCustomerEvents()"
+                                        ng-disabled="eventModal.selectedIds.length === 0 || eventModal.isSaving">
+                                    <span class="spinner-border spinner-border-sm me-1" ng-if="eventModal.isSaving"></span>
+                                    <span>Add</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
