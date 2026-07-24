@@ -114,11 +114,21 @@ namespace JPP.Web.Areas.Customer.Controllers
                 }
                 else
                 {
-                    return StatusCode(StatusCodes.Status500InternalServerError, new { Success = false, Message = "Failed to save customer events. Please try again." });
+                    return BadRequest(new { Success = false, Message = "Failed to save customer events. Please try again." });
                 }
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Business logic exception (e.g. customer already registered for event)
+                return BadRequest(new
+                {
+                    Success = false,
+                    Message = ex.Message
+                });
             }
             catch (Exception ex)
             {
+                // System / unexpected exception
                 return StatusCode(StatusCodes.Status500InternalServerError, new
                 {
                     Success = false,
@@ -190,6 +200,31 @@ namespace JPP.Web.Areas.Customer.Controllers
                     Success = false,
                     Message = $"An error occurred while deleting. {ex.Message}"
                 });
+            }
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetCustomerEvents([FromQuery] int customerId)
+        {
+            try
+            {
+                if (customerId <= 0)
+                {
+                    return BadRequest(new { Success = false, Message = "Invalid customer." });
+                }
+
+                var result = await _customerListService.GetCustomerEventsAsync(customerId);
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new
+                    {
+                        Success = false,
+                        Message = $"Failed to load customer events. {ex.Message}",
+                        StatusCode = StatusCodes.Status500InternalServerError
+                    });
             }
         }
     }

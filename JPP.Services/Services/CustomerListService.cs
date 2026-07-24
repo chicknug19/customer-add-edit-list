@@ -68,5 +68,22 @@ namespace JPP.Services.Services
             }
         }
 
+        public async Task<List<CustomerEventDto>> GetCustomerEventsAsync(int customerId)
+        {
+            if (customerId <= 0)
+            {
+                return new List<CustomerEventDto>();
+            }
+
+            try
+            {
+                return await _customerListRepository.GetCustomerEventsAsync(customerId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching events for customer {CustomerId}", customerId);
+                throw;
+            }
+        }
     }
 }

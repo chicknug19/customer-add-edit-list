@@ -159,5 +159,24 @@ namespace JPP.Data.Repositories
             return rowsAffected > 0;
         }
 
+        public async Task<List<CustomerEventDto>> GetCustomerEventsAsync(int customerId)
+        {
+            const string sql = @"
+                SELECT
+                    e.Name,
+                    e.EventDateTime
+                FROM Customer_Event ce
+                INNER JOIN BIZ_Event e ON e.Id = ce.EventId
+                WHERE ce.CustomerId = @CustomerId
+                ORDER BY e.EventDateTime DESC;";
+
+            using var conn = _crmDbConnectionFactory.Create();
+
+            var result = await conn.QueryAsync<CustomerEventDto>(
+                sql,
+                new { CustomerId = customerId });
+
+            return result.ToList();
+        }
     }
 }
