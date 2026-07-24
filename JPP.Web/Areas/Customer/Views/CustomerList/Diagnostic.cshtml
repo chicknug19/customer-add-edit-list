@@ -20,7 +20,7 @@
                 <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
             </div>
 
-            <div class="diagnostic-history" ng-if="!diagnosticModal.isLoading" style="max-height: 45vh; overflow-y: auto;">
+            <div class="diagnostic-history" ng-if="!diagnosticModal.isLoading" style="max-height: 200px; overflow-y: auto;">
                 <div class="diagnostic-entry" ng-repeat="entry in diagnosticModal.entries track by $index">
                     <div class="diagnostic-entry-label">
                         <strong ng-bind="(entry.type || entry.Type) + ':'"></strong>
