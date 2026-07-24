@@ -89,14 +89,22 @@ namespace JPP.Data.Repositories
             return rowsAffected > 0;
         }
         
-        public async Task<bool> PhoneNumberExistsAsync(string phoneNumber)
+        public async Task<bool> PhoneNumberExistsAsync(string phoneNumber, int? excludeCustomerId = null)
         {
             if (string.IsNullOrWhiteSpace(phoneNumber)) return false;
 
-            const string sql = "SELECT COUNT(1) FROM BIZ_Customer WHERE PhoneNumber = @PhoneNumber";
+            const string sql = @"
+                SELECT COUNT(1)
+                FROM BIZ_Customer
+                WHERE PhoneNumber = @PhoneNumber
+                AND (@ExcludeCustomerId IS NULL OR ID <> @ExcludeCustomerId)";
 
             using var conn = _crmDbConnectionFactory.Create();
-            return await conn.ExecuteScalarAsync<int>(sql, new { PhoneNumber = phoneNumber.Trim() }) > 0;
+            return await conn.ExecuteScalarAsync<int>(sql, new
+            {
+                PhoneNumber = phoneNumber.Trim(),
+                ExcludeCustomerId = excludeCustomerId
+            }) > 0;
         }
     }
 }

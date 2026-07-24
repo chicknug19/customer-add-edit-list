@@ -7,5 +7,6 @@ namespace JPP.Data.Interfaces
     {
         Task<CustomerDto?> GetCustomerByIdAsync(int id);
         Task<bool> UpdateCustomerAsync(CustomerRequest request);
+        Task<bool> PhoneNumberExistsAsync(string phoneNumber, int? excludeCustomerId = null);
     }
 }
