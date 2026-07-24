@@ -64,6 +64,20 @@ namespace JPP.Services.Services
                 return BaseResult<int>.Fail("Customer ID tidak valid.", 400);
             }
 
+            if (!string.IsNullOrWhiteSpace(request.PhoneNumber) && request.PhoneNumber.StartsWith("0"))
+            {
+                request.PhoneNumber = request.PhoneNumber.Substring(1);
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
+            {
+                bool isPhoneExist = await _customerEditRepository.PhoneNumberExistsAsync(request.PhoneNumber, request.ID);
+                if (isPhoneExist)
+                {
+                    return BaseResult<int>.Fail($"Phone Number '{request.PhoneNumber}' Already registered. Please use another number.", 400);
+                }
+            }
+
             var isUpdated = await _customerEditRepository.UpdateCustomerAsync(request);
 
             if (!isUpdated)
